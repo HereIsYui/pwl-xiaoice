@@ -1,15 +1,18 @@
 {
-  "name": "xiaobing",
+  "name": "bot_xiaobing",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description": "摸鱼派官方指定机器人(其实也不是)",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node index.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "含笑阁 & 涛之雨",
+  "license": "MIT",
   "dependencies": {
-    "axios": "^0.21.1",
-    "koa": "^2.13.1"
+    "axios": "^0.21.1"
+  },
+  "type": "module",
+  "devDependencies": {
+    "w-websocket-client": "^1.0.22"
   }
 }
