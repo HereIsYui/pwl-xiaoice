@@ -2,6 +2,10 @@
     "cookie": "",
     "nameOrEmail": "",
     "userPassword": "",
-    "apiKey":"",
-    "token":""
+    "apiKey": "",
+    "token": "",
+    "max_age": 14400,
+    "is18": true,
+    "working": true,
+    "enableSaohua": true
 }
