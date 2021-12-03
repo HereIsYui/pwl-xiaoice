@@ -10,6 +10,7 @@ const WSC = require('w-websocket-client');
 
 let workTime = cnFmt(new Date(configInfo.max_age * 1000 - 28800000), '$[Y年]$[M月]$[D天]$[h小时]$[m分钟]$[S秒]');
 let lastTime = new Date()
+let lastSetuTime = 0;
 const query = require('./database/mysql.js');
 
 function randomSaoHua() {
@@ -218,6 +219,13 @@ async function CallBackMsg(user, msg) {
 
 async function getXJJ(user) {
     try {
+        SetSuTuTimes(user)
+        let nowTime = new Date();
+        if(lastSetuTime!= 0 && nowTime - lastSetuTime < 5 * 60 * 1000){
+            sendMsg(`@${user} 你别这么猴急嘛！不是刚给你看过！再过${(5 * 60 * 1000 - (nowTime - lastSetuTime))/1000}s，才能看下一张哦！`)
+            return;
+        }
+        lastSetuTime = new Date();
         const res = await axios({
             method: 'get',
             url: 'http://img.btu.pp.ua/random/api.php?type=json',
@@ -227,7 +235,6 @@ async function getXJJ(user) {
             ? res.data.url
             : `http://img.btu.pp.ua/random/${res.data.url}`;
         const v = await getCDNLinks(u);
-        SetSuTuTimes(user)
         sendMsg(
             `@${user} :\n > 小姐姐来了，小心旁边窥屏哦! \n ${
                 v === u
@@ -241,7 +248,7 @@ async function getXJJ(user) {
     }
 }
 function GetLSPRanking(user){
-    query(`SELECT userName,setu_times FROM setu_ranking ORDER BY setu_times DESC`,function(err,vals,fields){
+    query(`SELECT userName,setu_times FROM setu_ranking ORDER BY setu_times DESC LIMIT 0,10`,function(err,vals,fields){
         if(err){
             sendMsg(`@${user} :lsp排行榜查询失败！`)
         }else{
@@ -444,8 +451,14 @@ async function getdata(user, data) {
 }
 
 async function getSetu(user, msg) {
-    msg = msg.trim();
     SetSuTuTimes(user)
+    let nowTime = new Date();
+    if(lastSetuTime!= 0 && nowTime - lastSetuTime < 5 * 60 * 1000){
+        sendMsg(`@${user} 你别这么猴急嘛！不是刚给你看过！再过${(5 * 60 * 1000 - (nowTime - lastSetuTime))/1000}s，才能看下一张哦！`)
+        return;
+    }
+    lastSetuTime = new Date();
+    msg = msg.trim();
     try {
         const res = await axios({
             method: 'get',
