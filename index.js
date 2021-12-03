@@ -83,8 +83,6 @@ function CallBackMsg(user, msg) {
         console.log('机器人唤醒，但是没有完全唤醒，配置已关闭');
     }
 
-    if (!/^(@hxg|小冰|嘿siri|小爱同学|嘿，siri|@i)/gi.test(msg)) return;
-
     if (/^TTS|^朗读/i.test(msg)) {
         const link =
                 Buffer.from(
@@ -99,6 +97,8 @@ function CallBackMsg(user, msg) {
         );
         return;
     }
+    if (!/^(@hxg|小冰|嘿siri|小爱同学|嘿，siri|@i)/gi.test(msg)) return;
+
     console.log('叮~你的小冰被唤醒了');
     let message = msg.replace(/@hxg|小冰|嘿siri|小爱同学|嘿，siri|@i/i, '');
     if (/并说/gi.test(message)) {
