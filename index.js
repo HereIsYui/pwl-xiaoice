@@ -1,16 +1,16 @@
-import axios from 'axios';
-import { readFileSync, writeFile } from 'fs';
+const axios = require('axios');
+const { readFileSync, writeFile } = require('fs');
 const confPath = './config.json';
 axios.defaults.timeout = 5000;
 const configInfo = JSON.parse(readFileSync(confPath, 'utf8'));
 setInterval(() => {
     getCookie();
 }, 6900000); //每次2个小时刷新一次
-import WSC from 'w-websocket-client';
+const WSC = require('w-websocket-client');
 
-let workTime = new Date(configInfo.max_age * 1000 - 28800000).cnFmt(
-    '$[Y年]$[M月]$[D天]$[h小时]$[m分]$[S秒]'
-);
+let workTime = cnFmt(new Date(configInfo.max_age * 1000 - 28800000), '$[Y年]$[M月]$[D天]$[h小时]$[m分钟]$[S秒]');
+let lastTime = new Date()
+const query = require('./database/mysql.js');
 
 function randomSaoHua() {
     return (a => a[Math.floor(Math.random() * a.length)])([
@@ -27,54 +27,48 @@ function randomSaoHua() {
         '好冷清啊',
     ]);
 }
-function autoSaohua() {
-    if(configInfo.enableSaohua){
 
+function autoSaohua() {
+    if (configInfo.enableSaohua) {
+        let nowTime = new Date()
+        if (nowTime - lastTime > 10 * 60 * 1000) {
+            sendMsg(randomSaoHua())
+        }
     }
 }
-Date.prototype.cnFmt = function (str) {
-    return str
-        .replace(/y/i, this.getFullYear() - 1970)
-        .replace(/M/i, this.getMonth())
-        .replace(/d/i, this.getDate() - 1)
-        .replace(/h/i, this.getHours())
-        .replace(/m/i, this.getMinutes())
-        .replace(/s/i, this.getSeconds())
-        .replace(/\$\[0+[^\]]+\]|\$\[|\]/g, '');
-};
 
+function cnFmt(time, str) {
+    return str.replace(/y/i, time.getFullYear() - 1970)
+        .replace(/M/i, time.getMonth())
+        .replace(/d/i, time.getDate() - 1)
+        .replace(/h/i, time.getHours())
+        .replace(/m/i, time.getMinutes())
+        .replace(/s/i, time.getSeconds())
+        .replace(/\$\[0+[^\]]+\]|\$\[|\]/g, '');
+}
 let opt = {
     url: `wss://pwl.icu/chat-room-channel?apiKey=${configInfo.apiKey}`,
-    open: function () {
+    open: function() {
         console.log('嘀~你的小冰已上线!');
-        // sendMsg('嘀~你的小冰已上线!');
     },
-    close: function () {
+    close: function() {
         console.log('嘀~你的小冰已掉线!');
-        // sendMsg('嘀~你的小冰已掉线!');
     },
-    message: async function (data) {
-        // let json = JSON.stringify(data, null, 2)
+    message: async function(data) {
         let dataInfo = JSON.parse(data.toString('utf8'));
         let msg = dataInfo.md;
         let user = dataInfo.userName;
-        // let ruleCB =
-        // /([\u96f6\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u767e\u5343\u4e07]{2})|([^\d]|^)[1-5]*[0-9][^\d]*[摸鱼|闯关].*?过/;
         if (dataInfo.type == 'msg' && ['i', 'hxg'].indexOf(user) < 0) {
             console.log(`收到${user}的消息:${msg}`);
-
-            // ruleCB.test(msg) &&
-            //     sendMsg(`@${user} https://pwl.icu/article/1635664654563`);
             CallBackMsg(user, msg);
         }
     },
-    error: function (err) {
+    error: function(err) {
         console.log('嘀~你的小冰尝试连接失败!');
-        // sendMsg('嘀~你的小冰尝试连接失败!');
     },
 };
 
-function CallBackMsg(user, msg) {
+async function CallBackMsg(user, msg) {
     if (/^(来吧小冰|滚吧小冰)$/.test(msg.trim())) {
         changeWorkState(user, msg);
         return;
@@ -85,13 +79,13 @@ function CallBackMsg(user, msg) {
 
     if (/^TTS|^朗读/i.test(msg)) {
         const link =
-                Buffer.from(
-                    'aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==',
-                    'base64'
-                ) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, '')),
+            Buffer.from(
+                'aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==',
+                'base64'
+            ) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, '')),
             u = await getCDNLinks(link);
         sendMsg(
-            `@${user} 那你可就听好了<br>${
+                `@${user} :那你可就听好了<br>${
                 u === link ? '' : `<br>音频有效期【${workTime}】<br>`
             }<audio src='${u}' controls/>`
         );
@@ -100,6 +94,8 @@ function CallBackMsg(user, msg) {
     if (!/^(@hxg|小冰|嘿siri|小爱同学|嘿，siri|@i)/gi.test(msg)) return;
 
     console.log('叮~你的小冰被唤醒了');
+    // 更新上次讲话时间
+    lastTime = new Date();
     let message = msg.replace(/@hxg|小冰|嘿siri|小爱同学|嘿，siri|@i/i, '');
     if (/并说/gi.test(message)) {
         message = message.split(':');
@@ -111,16 +107,18 @@ function CallBackMsg(user, msg) {
     const r18 = /(打开|关闭)r18/g;
     const caidan = /菜单|功能列表/g;
     const watchVideo = /小姐姐视频/;
-    const fangChenNi = /^防沉溺时长 \d+$/g;
-    const saohua=/^(小冰(别逼逼?了|闭嘴|)|小冰(人呢|在哪))$/
+    const fangChenNi = /^(防沉溺|防沉溺)时长 \d+$/g;
+    const lspranking = /^lsp排行/g;
+    const saohua=/^(别逼逼?了|闭嘴|人呢|在哪)$/
     if (message === '') {
         if (Math.random() > 0.95) sendMsg(randomSaoHua());
     } else if (watchVideo.test(message)) {
-        sendMsg(`@${user} 正在获取链接并检测链接活性，请稍等几秒`);
+        SetSuTuTimes(user)
+        sendMsg(`@${user} :正在获取链接并检测链接活性，请稍等几秒`);
         getVideoLink(async res => {
             const sta = await getCDNLinks(res);
             sendMsg(
-                `@${user} > 小姐姐来喽，请在方便的时候查看<br>${
+                `@${user} :\n > 小姐姐来喽，请在方便的时候查看<br>${
                     res === sta ? '' : `视频有效期【${workTime}】<br>`
                 }<br><video controls src='${sta}'/>`
             );
@@ -133,10 +131,8 @@ function CallBackMsg(user, msg) {
         getSetu(user, message);
     } else if (r18.test(message)) {
         changeR18(user, message);
-    }else if(saohua.test(message)){
-            changeSaoHua(user, message);
-    } else if (caidan.test(message)) {
-        sendMsg(`@${user} 功能列表:\n
+    }else if (caidan.test(message)) {
+        sendMsg(`@${user} :功能列表:\n
         1. 回复[看妞][小姐姐][来个妞]查看妹子图片\n
         2. 回复[涩图]可查看涩图(可在涩图后跟标签查找对应的标签图片 如: 涩图 原神)\n
         (当前插图模式:${
@@ -144,10 +140,11 @@ function CallBackMsg(user, msg) {
         } 可输入[打开/关闭r18]切换)\n
         3. 回复[小姐姐视频]可查看国外小姐姐的视频\n
         4. 全局发送[TTS+文本]或[朗读+文本]即可朗读(无需关键词)\n
-        5. 直接发短语即可聊天。
-        6. TIP:为了您的健康和安全，所有的图片视频都已接入“防沉溺系统”，\n
-        链接仅保存【${workTime}】,可通过[防沉溺 时间(单位:秒)]更改
-        7. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态。。。\n
+        5. 直接发短语即可聊天。\n
+        6. 输入[lsp排行]可查看聊天室的lsp排行\n
+        7. TIP:为了您的健康和安全，所有的图片视频都已接入“防沉溺系统”，
+        链接仅保存【${workTime}】,可通过[防沉溺 时间(单位:秒)]更改\n
+        8. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...\n
         ${(a => a[Math.floor(Math.random() * a.length)])([
             'emmm我说关闭你信吗？',
             '肯定是打开啦，不然怎么响应的。。',
@@ -208,7 +205,9 @@ function CallBackMsg(user, msg) {
             '510 Not Extended',
             '511 Network Authentication Required',
         ])}`);
-    } else {
+    } else if(lspranking.test(message)){
+        GetLSPRanking(user)
+    }else{
         getdata(user, message);
     }
 }
@@ -224,17 +223,44 @@ async function getXJJ(user) {
             ? res.data.url
             : `http://img.btu.pp.ua/random/${res.data.url}`;
         const v = await getCDNLinks(u);
+        SetSuTuTimes(user)
         sendMsg(
-            `@${user} \n > 小姐姐来了，小心旁边窥屏哦! \n ${
+            `@${user} :\n > 小姐姐来了，小心旁边窥屏哦! \n ${
                 v === u
                     ? '\n![小姐姐](' + v
-                    : `图片有效期【${workTime}】至\n\n![小姐姐](${v}`
+                    : `图片有效期【${workTime}】\n\n![小姐姐](${v}`
             })`
         );
         return true;
     } catch (error) {
         return false;
     }
+}
+function GetLSPRanking(user){
+    query(`SELECT userName,setu_times FROM setu_ranking ORDER BY setu_times DESC`,function(err,vals,fields){
+        if(err){
+            sendMsg(`@${user} :lsp排行榜查询失败！`)
+        }else{
+            let msg = `> LSP排行榜 \n`
+            vals.forEach((item,index) => {
+                msg+=`${index + 1 }.  @${item.userName} 共计查询 ${item.setu_times} 次 ${index == 0 ? 'LSP之王！' : ''}\n`
+            });
+            sendMsg(`@${user} :\n ${msg}`)
+        }
+    })
+}
+function SetSuTuTimes(user){
+    query(`SELECT * FROM setu_ranking WHERE userName = '${user}'`,function(err,vals,fields){
+        if(err){
+            console.log(err)
+        }else{
+            let sql = `INSERT INTO setu_ranking (userName,setu_times,update_datetime,delete_flag) VALUES('${user}',1,now(),0)`
+            if(vals.length != 0){
+                sql = `UPDATE setu_ranking SET setu_times = setu_times+1 WHERE userName = '${user}'`
+            }
+            query(sql,function(err,vals,fields){})
+        }
+       });
 }
 function changeSaoHua(user, message) {
     if (['Yui', 'taozhiyu'].indexOf(user) >= 0) {
@@ -243,7 +269,29 @@ function changeSaoHua(user, message) {
     if (Math.random() > 0.95) sendMsg(randomSaoHua());
     //5%几率回复，彩蛋算是吧
 }
-// for(let a=0;a<=100000;a++)Math.random()>0.99999&&
+async function wyydiange(user,message){
+    let msg = message.substr(message.indexOf("点歌")+2).trim();
+    msg = encodeURI(msg)
+    try {
+        const res = await axios({
+            method: 'get',
+            url: `https://api.suwan.xyz/api/API/dg/wy.php?msg=${msg}&n=1&r=json`,
+        });
+        let url = res.data.meta.music.musicUrl;
+        let mid = url.split("=")[1];
+        sendMsg(
+            `@${user} :\n >滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=298 height=52 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=32"></iframe>`
+        );
+        return true;
+    } catch (error) {
+        console.log(error)
+        sendMsg(
+            `@${user} :\n 你丫的这首歌太难找了!换一个!`
+        );
+        return false;
+    }
+}
+
 function changeWorkState(user, message) {
     if (['Yui', 'taozhiyu'].indexOf(user) >= 0) {
         const turnOn = message.match('来吧') >= 0;
@@ -316,7 +364,13 @@ function changeWorkState(user, message) {
 
 function changeFangChenNi(user, message) {
     if (['Yui', 'taozhiyu'].indexOf(user) >= 0) {
-        configInfo.is18 = message.match(/\d+/)[0];
+        let max_age = message.match(/\d+/)[0];
+        console.log(max_age)
+        if(max_age < 60){
+            sendMsg(`@${user} :想啥呢！最少1分钟！`)
+            return;
+        }
+        configInfo.max_age = max_age;
         writeFile(
             confPath,
             JSON.stringify(configInfo, null, 4),
@@ -324,18 +378,16 @@ function changeFangChenNi(user, message) {
             err => {
                 if (err) {
                     sendMsg(
-                        `@${user} 修改出错! 请查看日志，机器人已停止运行\n
+                        `@${user} :修改出错! 请查看日志，机器人已停止运行\n
                         当前防沉溺时间:${workTime}(机器人都停止运行了,这个还有什么意义吗喂?)`
                     );
                     throw err;
                 }
-                workTime = new Date(configInfo.max_age * 1000 - 28800000).cnFmt(
-                    '$[Y年]$[M月]$[D天]$[h小时]$[m分]$[S秒]'
-                );
-                sendMsg(`@${user} 修改成功，当前防沉溺时间:${workTime}`);
+                workTime = cnFmt(new Date(configInfo.max_age * 1000 - 28800000),'$[Y年]$[M月]$[D天]$[h小时]$[m分钟]$[S秒]');
+                sendMsg(`@${user} :修改成功，当前防沉溺时间:${workTime}`);
             }
         );
-    } else sendMsg(`@${user} 暂无权限，当前防沉溺时间:${workTime}`);
+    } else sendMsg(`@${user} :暂无权限，当前防沉溺时间:${workTime}`);
 }
 
 function changeR18(user, message) {
@@ -348,7 +400,7 @@ function changeR18(user, message) {
             err => {
                 if (err) {
                     sendMsg(
-                        `@${user} 修改出错! 请查看日志，机器人已停止运行\n
+                        `@${user} :修改出错! 请查看日志，机器人已停止运行\n
                         当前插图模式:${
                             configInfo.is18 ? 'lsp模式' : '绅士模式'
                         }(机器人都停止运行了,这个还有什么意义吗喂?)`
@@ -356,7 +408,7 @@ function changeR18(user, message) {
                     throw err;
                 }
                 sendMsg(
-                    `@${user} 修改成功，当前插图模式:${
+                    `@${user} :修改成功，当前插图模式:${
                         configInfo.is18 ? 'lsp模式' : '绅士模式'
                     }`
                 );
@@ -364,7 +416,7 @@ function changeR18(user, message) {
         );
     } else
         sendMsg(
-            `@${user} 暂无权限，当前插图模式:${
+            `@${user} :暂无权限，当前插图模式:${
                 configInfo.is18 ? 'lsp模式' : '绅士模式'
             }`
         );
@@ -449,7 +501,7 @@ async function getdata(user, data) {
         } else {
             cb = res.data[0].Content.Text;
         }
-        sendMsg(`@${user} ` + cb);
+        sendMsg(`@${user} :` + cb);
         return true;
     } catch (error) {
         return '已读，不回';
@@ -458,6 +510,7 @@ async function getdata(user, data) {
 
 async function getSetu(user, msg) {
     msg = msg.trim();
+    SetSuTuTimes(user)
     try {
         const res = await axios({
             method: 'get',
@@ -474,11 +527,11 @@ async function getSetu(user, msg) {
             },
         });
         if (res.data.data.length == 0) {
-            sendMsg(`@${user} 想啥呢，没有!`);
+            sendMsg(`@${user} :想啥呢，没有!`);
         } else {
             const sta = await getCDNLinks(res.data.data[0].urls.small, true);
             sendMsg(
-                `@${user} \n > 涩图来了!看不到的请不要看了${
+                `@${user} :\n > 涩图来了!看不到的请不要看了${
                     res.data.data[0].urls.small === sta
                         ? ''
                         : `<br>链接有效期为【${workTime}】`
@@ -487,7 +540,7 @@ async function getSetu(user, msg) {
         }
         return res.data;
     } catch (error) {
-        sendMsg(`@${user} 已读，不回!`);
+        sendMsg(`@${user} :已读，不回!`);
         return error;
     }
 }
@@ -568,5 +621,9 @@ async function init() {
         await getKey();
     }
     let wsc = new WSC(opt);
+    // 每5分钟检测一次
+    setInterval(() => {
+        autoSaohua() 
+    }, 5 * 60 * 1000);
 }
 init();
