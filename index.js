@@ -33,7 +33,7 @@ function randomSaoHua() {
 function autoSaohua() {
     if (configInfo.enableSaohua) {
         let nowTime = new Date()
-        if (nowTime - lastTime > 10 * 60 * 1000) {
+        if (nowTime - lastTime > 10 * 60 * 1000 && nowTime.getHours() <= 22 && nowTime.getHours() >= 7) {
             sendMsg(randomSaoHua())
         }
     }
@@ -79,7 +79,7 @@ async function CallBackMsg(user, msg) {
         wyydiange(user, msg)
         return
     }
-    if (!/^(@hxg|小冰|嘿siri|小爱同学|嘿，siri|@i)/gi.test(msg)) return;
+    if (!/^(小冰|嘿siri|小爱同学|嘿，siri)/gi.test(msg)) return;
 
     if (/^TTS|^朗读/i.test(msg)) {
         const link =
@@ -103,7 +103,7 @@ async function CallBackMsg(user, msg) {
     console.log('叮~你的小冰被唤醒了');
     // 更新上次讲话时间
     lastTime = new Date();
-    let message = msg.replace(/@hxg|小冰|嘿siri|小爱同学|嘿，siri|@i/i, '');
+    let message = msg.replace(/小冰|嘿siri|小爱同学|嘿，siri/i, '');
     if (/并说/gi.test(message)) {
         message = message.split(':');
         message = message[message.length - 1];
@@ -214,7 +214,7 @@ async function CallBackMsg(user, msg) {
     } else if(lspranking.test(message)){
         GetLSPRanking(user)
     }else{
-        let msg = await getdata(user, message);
+        let msg = await getdata(message);
         sendMsg(`@${user} :` + msg);
     }
 }
@@ -256,7 +256,7 @@ function GetLSPRanking(user){
         }else{
             let msg = `> LSP排行榜 \n`
             vals.forEach((item,index) => {
-                msg+=`${index + 1 }.  @${item.userName} 共计查询 ${item.setu_times} 次 ${index == 0 ? 'LSP之王！' : ''}\n`
+                msg+=`${index + 1 }.  @${item.userName} 共计查询 ${item.setu_times} 次 ${index == 0 ? '![lsp之王](https://unv-shield.librian.net/api/unv_shield?scale=0.79&txt=lsp%E4%B9%8B%E7%8E%8B&url=https://www.lingmx.com/52pj/images/die.png&backcolor=568289&fontcolor=ffffff)' : ''}\n`
             });
             sendMsg(`@${user} :\n ${msg}`)
         }
@@ -341,7 +341,7 @@ function changeFangChenNi(user, message) {
 }
 
 function changeR18(user, message) {
-    if (['Yui', 'taozhiyu'].indexOf(user) >= 0) {
+    if (['Yui', 'taozhiyu','csfwff','adlered'].indexOf(user) >= 0) {
         configInfo.is18 = !message.match('关闭');
         writeFile(
             confPath,
@@ -444,7 +444,7 @@ async function getdata(data) {
         });
         let cb = '';
         if (res.data[0].Content.AudioUrl) {
-            cb = `<br><audio controls> <source src="${cb.AudioUrl}" type="audio/mpeg"></audio><hr><p>以下是语音转文字: <br>${cb.Text}</p>`;
+            cb = `<br><audio controls> <source src="${res.data[0].Content.AudioUrl}" type="audio/mpeg"></audio><hr><p>以下是语音转文字: <br>${res.data[0].Content.Text}</p>`;
         } else {
             cb = res.data[0].Content.Text;
         }
@@ -468,7 +468,7 @@ async function getSetu(user, msg) {
             method: 'get',
             url: encodeURI(
                 `https://api.lolicon.app/setu/v2?r18=${
-                    configInfo.is18
+                    configInfo.is18 ? 1 : 0
                 }&size=small${
                     msg.split(' ')[1] ? `&tag=${msg.split(' ')[1]}` : ''
                 }`
