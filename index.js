@@ -5,11 +5,13 @@ axios.defaults.timeout = 5000;
 const configInfo = JSON.parse(readFileSync(confPath, 'utf8'));
 setInterval(() => {
     getCookie();
-}, 6900000); //每次2个小时刷新一次
+    getdata('小冰在吗？')
+}, 60 * 60 * 1000); //每次1个小时刷新一次
 const WSC = require('w-websocket-client');
 
 let workTime = cnFmt(new Date(configInfo.max_age * 1000 - 28800000), '$[Y年]$[M月]$[D天]$[h小时]$[m分钟]$[S秒]');
 let lastTime = new Date()
+let lastSetuTime = 0;
 const query = require('./database/mysql.js');
 
 function randomSaoHua() {
@@ -31,7 +33,7 @@ function randomSaoHua() {
 function autoSaohua() {
     if (configInfo.enableSaohua) {
         let nowTime = new Date()
-        if (nowTime - lastTime > 10 * 60 * 1000) {
+        if (nowTime - lastTime > 10 * 60 * 1000 && nowTime.getHours() <= 22 && nowTime.getHours() >= 7) {
             sendMsg(randomSaoHua())
         }
     }
@@ -76,6 +78,12 @@ async function CallBackMsg(user, msg) {
     if (!configInfo.working) {
         console.log('机器人唤醒，但是没有完全唤醒，配置已关闭');
     }
+    const diange = /^点歌/g;
+    if (diange.test(msg)) {
+        wyydiange(user, msg)
+        return
+    }
+    if (!/^(小冰|嘿siri|小爱同学|嘿，siri)/gi.test(msg)) return;
 
     if (/^TTS|^朗读/i.test(msg)) {
         const link =
@@ -96,7 +104,7 @@ async function CallBackMsg(user, msg) {
     console.log('叮~你的小冰被唤醒了');
     // 更新上次讲话时间
     lastTime = new Date();
-    let message = msg.replace(/@hxg|小冰|嘿siri|小爱同学|嘿，siri|@i/i, '');
+    let message = msg.replace(/小冰|嘿siri|小爱同学|嘿，siri/i, '');
     if (/并说/gi.test(message)) {
         message = message.split(':');
         message = message[message.length - 1];
@@ -208,12 +216,20 @@ async function CallBackMsg(user, msg) {
     } else if(lspranking.test(message)){
         GetLSPRanking(user)
     }else{
-        getdata(user, message);
+        let msg = await getdata(message);
+        sendMsg(`@${user} :` + msg);
     }
 }
 
 async function getXJJ(user) {
     try {
+        SetSuTuTimes(user)
+        let nowTime = new Date();
+        if(lastSetuTime!= 0 && nowTime - lastSetuTime < 5 * 60 * 1000){
+            sendMsg(`@${user} 你别这么猴急嘛！不是刚给你看过！再过${(5 * 60 * 1000 - (nowTime - lastSetuTime))/1000}s，才能看下一张哦！ \n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
+            return;
+        }
+        lastSetuTime = new Date();
         const res = await axios({
             method: 'get',
             url: 'http://img.btu.pp.ua/random/api.php?type=json',
@@ -223,7 +239,6 @@ async function getXJJ(user) {
             ? res.data.url
             : `http://img.btu.pp.ua/random/${res.data.url}`;
         const v = await getCDNLinks(u);
-        SetSuTuTimes(user)
         sendMsg(
             `@${user} :\n > 小姐姐来了，小心旁边窥屏哦! \n ${
                 v === u
@@ -237,13 +252,13 @@ async function getXJJ(user) {
     }
 }
 function GetLSPRanking(user){
-    query(`SELECT userName,setu_times FROM setu_ranking ORDER BY setu_times DESC`,function(err,vals,fields){
+    query(`SELECT userName,setu_times FROM setu_ranking ORDER BY setu_times DESC LIMIT 0,10`,function(err,vals,fields){
         if(err){
             sendMsg(`@${user} :lsp排行榜查询失败！`)
         }else{
             let msg = `> LSP排行榜 \n`
             vals.forEach((item,index) => {
-                msg+=`${index + 1 }.  @${item.userName} 共计查询 ${item.setu_times} 次 ${index == 0 ? 'LSP之王！' : ''}\n`
+                msg+=`${index + 1 }.  @${item.userName} 共计查询 ${item.setu_times} 次 ${index == 0 ? '![lsp之王](https://unv-shield.librian.net/api/unv_shield?scale=0.79&txt=lsp%E4%B9%8B%E7%8E%8B&url=https://www.lingmx.com/52pj/images/die.png&backcolor=568289&fontcolor=ffffff)' : ''}\n`
             });
             sendMsg(`@${user} :\n ${msg}`)
         }
@@ -274,11 +289,17 @@ async function wyydiange(user,message){
     msg = encodeURI(msg)
     try {
         const res = await axios({
-            method: 'get',
-            url: `https://api.suwan.xyz/api/API/dg/wy.php?msg=${msg}&n=1&r=json`,
+            method: 'POST',
+            headers:{
+                Host: 'music.163.com',
+                Origin: 'http://music.163.com',
+                'user-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                referer: 'http://music.163.com/search/',
+            },
+            url: `http://music.163.com/api/search/get/web?csrf_token&hlpretag&hlposttag&s=${msg}&type=1&offset=0&total=true&limit=1`,
         });
-        let url = res.data.meta.music.musicUrl;
-        let mid = url.split("=")[1];
+        let mid = res.data.result.songs[0].id;
         sendMsg(
             `@${user} :\n >滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=298 height=52 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=32"></iframe>`
         );
@@ -391,7 +412,7 @@ function changeFangChenNi(user, message) {
 }
 
 function changeR18(user, message) {
-    if (['Yui', 'taozhiyu'].indexOf(user) >= 0) {
+    if (['Yui', 'taozhiyu','csfwff','adlered'].indexOf(user) >= 0) {
         configInfo.is18 = !message.match('关闭');
         writeFile(
             confPath,
@@ -477,7 +498,7 @@ function checkUser() {
         });
 }
 
-async function getdata(user, data) {
+async function getdata(data) {
     try {
         const res = await axios({
             method: 'post',
@@ -487,36 +508,38 @@ async function getdata(user, data) {
                 'content-type': ' application/json;charset=UTF-8',
                 cookie: configInfo.cookie,
                 origin: 'https://ux-plus.xiaoice.com',
-                referer:
-                    'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-                'user-agent':
-                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+                referer:'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
+                'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
             },
             data: `{"TraceId":"","PartnerName":"","SubPartnerId":"VirtualGF","Content":{"Text":"${data}","Metadata":{}}}`,
         });
-        // console.log(res.data[0]);
         let cb = '';
         if (res.data[0].Content.AudioUrl) {
-            cb = `<br><audio controls> <source src="${cb.AudioUrl}" type="audio/mpeg"></audio><hr><p>以下是语音转文字: <br>${cb.Text}</p>`;
+            cb = `<br><audio controls> <source src="${res.data[0].Content.AudioUrl}" type="audio/mpeg"></audio><hr><p>以下是语音转文字: <br>${res.data[0].Content.Text}</p>`;
         } else {
             cb = res.data[0].Content.Text;
         }
-        sendMsg(`@${user} :` + cb);
-        return true;
+        return cb;
     } catch (error) {
         return '已读，不回';
     }
 }
 
 async function getSetu(user, msg) {
-    msg = msg.trim();
     SetSuTuTimes(user)
+    let nowTime = new Date();
+    if(lastSetuTime!= 0 && nowTime - lastSetuTime < 5 * 60 * 1000){
+        sendMsg(`@${user} 你别这么猴急嘛！不是刚给你看过！再过${(5 * 60 * 1000 - (nowTime - lastSetuTime))/1000}s，才能看下一张哦！ \n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
+        return;
+    }
+    lastSetuTime = new Date();
+    msg = msg.trim();
     try {
         const res = await axios({
             method: 'get',
             url: encodeURI(
                 `https://api.lolicon.app/setu/v2?r18=${
-                    configInfo.is18
+                    configInfo.is18 ? 1 : 0
                 }&size=small${
                     msg.split(' ')[1] ? `&tag=${msg.split(' ')[1]}` : ''
                 }`
@@ -555,8 +578,7 @@ function getCookie() {
             cookie: configInfo.cookie,
             origin: ' https://ux-plus.xiaoice.com',
             referer: ' https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-            'user-agent':
-                ' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+            'user-agent':' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
         },
     });
 }
