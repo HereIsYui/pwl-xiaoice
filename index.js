@@ -5,7 +5,8 @@ axios.defaults.timeout = 5000;
 const configInfo = JSON.parse(readFileSync(confPath, 'utf8'));
 setInterval(() => {
     getCookie();
-}, 6900000); //每次2个小时刷新一次
+    getdata('小冰在吗？')
+}, 60 * 60 * 1000); //每次1个小时刷新一次
 const WSC = require('w-websocket-client');
 
 let workTime = cnFmt(new Date(configInfo.max_age * 1000 - 28800000), '$[Y年]$[M月]$[D天]$[h小时]$[m分钟]$[S秒]');
@@ -213,7 +214,8 @@ async function CallBackMsg(user, msg) {
     } else if(lspranking.test(message)){
         GetLSPRanking(user)
     }else{
-        getdata(user, message);
+        let msg = await getdata(user, message);
+        sendMsg(`@${user} :` + msg);
     }
 }
 
@@ -285,11 +287,17 @@ async function wyydiange(user,message){
     msg = encodeURI(msg)
     try {
         const res = await axios({
-            method: 'get',
-            url: `https://api.suwan.xyz/api/API/dg/wy.php?msg=${msg}&n=1&r=json`,
+            method: 'POST',
+            headers:{
+                Host: 'music.163.com',
+                Origin: 'http://music.163.com',
+                'user-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                referer: 'http://music.163.com/search/',
+            },
+            url: `http://music.163.com/api/search/get/web?csrf_token&hlpretag&hlposttag&s=${msg}&type=1&offset=0&total=true&limit=1`,
         });
-        let url = res.data.meta.music.musicUrl;
-        let mid = url.split("=")[1];
+        let mid = res.data.result.songs[0].id;
         sendMsg(
             `@${user} :\n >滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=298 height=52 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=32"></iframe>`
         );
@@ -419,7 +427,7 @@ function checkUser() {
         });
 }
 
-async function getdata(user, data) {
+async function getdata(data) {
     try {
         const res = await axios({
             method: 'post',
@@ -429,22 +437,18 @@ async function getdata(user, data) {
                 'content-type': ' application/json;charset=UTF-8',
                 cookie: configInfo.cookie,
                 origin: 'https://ux-plus.xiaoice.com',
-                referer:
-                    'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-                'user-agent':
-                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+                referer:'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
+                'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
             },
             data: `{"TraceId":"","PartnerName":"","SubPartnerId":"VirtualGF","Content":{"Text":"${data}","Metadata":{}}}`,
         });
-        // console.log(res.data[0]);
         let cb = '';
         if (res.data[0].Content.AudioUrl) {
             cb = `<br><audio controls> <source src="${cb.AudioUrl}" type="audio/mpeg"></audio><hr><p>以下是语音转文字: <br>${cb.Text}</p>`;
         } else {
             cb = res.data[0].Content.Text;
         }
-        sendMsg(`@${user} :` + cb);
-        return true;
+        return cb;
     } catch (error) {
         return '已读，不回';
     }
@@ -503,8 +507,7 @@ function getCookie() {
             cookie: configInfo.cookie,
             origin: ' https://ux-plus.xiaoice.com',
             referer: ' https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-            'user-agent':
-                ' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+            'user-agent':' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
         },
     });
 }
