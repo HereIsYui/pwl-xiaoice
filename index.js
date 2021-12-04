@@ -224,7 +224,7 @@ async function getXJJ(user) {
         SetSuTuTimes(user)
         let nowTime = new Date();
         if(lastSetuTime!= 0 && nowTime - lastSetuTime < 5 * 60 * 1000){
-            sendMsg(`@${user} 你别这么猴急嘛！不是刚给你看过！再过${(5 * 60 * 1000 - (nowTime - lastSetuTime))/1000}s，才能看下一张哦！`)
+            sendMsg(`@${user} 你别这么猴急嘛！不是刚给你看过！再过${(5 * 60 * 1000 - (nowTime - lastSetuTime))/1000}s，才能看下一张哦！ \n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
             return;
         }
         lastSetuTime = new Date();
@@ -458,7 +458,7 @@ async function getSetu(user, msg) {
     SetSuTuTimes(user)
     let nowTime = new Date();
     if(lastSetuTime!= 0 && nowTime - lastSetuTime < 5 * 60 * 1000){
-        sendMsg(`@${user} 你别这么猴急嘛！不是刚给你看过！再过${(5 * 60 * 1000 - (nowTime - lastSetuTime))/1000}s，才能看下一张哦！`)
+        sendMsg(`@${user} 你别这么猴急嘛！不是刚给你看过！再过${(5 * 60 * 1000 - (nowTime - lastSetuTime))/1000}s，才能看下一张哦！ \n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
         return;
     }
     lastSetuTime = new Date();
