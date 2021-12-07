@@ -51,7 +51,7 @@ const opt = {
  */
 async function CallBackMsg(user, msg) {
     updateLastTime(); //有人说话就更新时间
-    const { getXJJ, GetLSPRanking, getSetu, sendXJJVideo } = require('./lsp');
+    const { getXJJ, GetLSPRanking, getSetu, sendXJJVideo, getXiaohuaAndTianqi } = require('./lsp');
     const {
         changeSaoHua,
         changeWorkState,
@@ -81,13 +81,13 @@ async function CallBackMsg(user, msg) {
     if (/^TTS|^朗读/i.test(msg)) {
         updateLastTime();
         const link =
-                Buffer.from(
-                    'aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==',
-                    'base64'
-                ) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, '')),
+            Buffer.from(
+                'aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==',
+                'base64'
+            ) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, '')),
             u = await getCDNLinks(link);
         sendMsg(
-            `@${user} :那你可就听好了<br>${
+                `@${user} :那你可就听好了<br>${
                 u === link
                     ? ''
                     : `<br>音频有效期【${formatTime(
@@ -118,6 +118,8 @@ async function CallBackMsg(user, msg) {
     const fangChenNiWait = /^防沉[溺迷]等待\s+\d+$/;
     const lspranking = /^lsp排行$/;
     const saohua = /^(别逼逼?了|闭嘴|人呢|在哪儿?呢?)$/;
+    const tianqi = /\w*天气$/;
+    const xiaohua = /(\w*笑话|笑话分类)$/;
     if (message === '') {
         if (Math.random() > 0.8) sendMsg(EmptyCall(user));
     } else if (saohua.test(message)) {
@@ -136,15 +138,17 @@ async function CallBackMsg(user, msg) {
         changeR18(user, message);
     } else if (caidan.test(message)) {
         sendMsg(`@${user} 功能列表:\n
-        1. 回复[看妞][小姐姐][来个妞]等查看妹子图片\n
-        2. 回复[涩图]可查看涩图(可在涩图后跟标签查找对应的标签图片 如: 涩图 原神)\n
+        1. 回复[看妞][小姐姐][来个妞]等查看妹子图片 [接口维护中]❌\n
+        2. 回复[涩图]可查看涩图(可在涩图后跟标签查找对应的标签图片 如: 涩图 原神) [接口维护中]❌\n
         (当前插图模式:${
             conf.rob.is18 ? 'lsp模式' : '绅士模式'
         } 可输入[打开/关闭r18]切换)\n
-        3. 回复[小姐姐视频]可查看国外小姐姐的视频\n
+        3. 回复[小姐姐视频]可查看国外小姐姐的视频 [接口维护中]❌\n
         4. 全局发送[TTS+文本]或[朗读+文本]即可朗读(无需关键词)\n
         5. 直接发短语即可聊天。\n
-        6. 输入[lsp排行]可查看聊天室的lsp排行\n
+        6. 回复[xxx天气]可以查询天气
+        7. 回复[笑话]可以随机讲个笑话
+        8. 输入[lsp排行]可查看聊天室的lsp排行\n
         > TIP:为了您的健康和安全，所有的图片视频都已接入“防沉溺系统”，\n
         > 链接仅保存【${formatTime(
             conf.api.max_age * 60
@@ -152,11 +156,15 @@ async function CallBackMsg(user, msg) {
         > 每次查看后须等待【${formatTime(
             conf.rob.lspWaitingTime * 60
         )}】,管理员可通过[防沉溺等待 时间(单位:分钟)]更改\n\n
-        8. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...\n
+        9. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...\n
         ${getResponse()}`);
     } else if (lspranking.test(message)) {
         GetLSPRanking(user);
-    } else {
+    } else if(tianqi.test(message)){
+        getXiaohuaAndTianqi(user,message)
+    }else if(xiaohua.test(message)){
+        getXiaohuaAndTianqi(user,message)
+    }else{
         let msg = await getChatData(message);
         sendMsg(`@${user} :` + msg);
     }
