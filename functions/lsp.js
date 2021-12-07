@@ -11,14 +11,14 @@ let lastSetuTime = 0;
 function checkSetuTime(user) {
     query(
         `SELECT * FROM setu_ranking WHERE userName = '${user}'`,
-        function (err, vals) {
+        function(err, vals) {
             if (err) {
                 console.log('checkSetuTime出错:', err);
             } else {
                 query(
-                    vals.length !== 0
-                        ? `UPDATE setu_ranking SET setu_times = setu_times+1 WHERE userName = '${user}'`
-                        : `INSERT INTO setu_ranking (userName,setu_times,update_datetime,delete_flag) VALUES('${user}',1,now(),0)`
+                    vals.length !== 0 ?
+                    `UPDATE setu_ranking SET setu_times = setu_times+1 WHERE userName = '${user}'` :
+                    `INSERT INTO setu_ranking (userName,setu_times,update_datetime,delete_flag) VALUES('${user}',1,now(),0)`
                 );
             }
         }
@@ -52,12 +52,12 @@ async function getXJJ(user) {
             url: 'http://img.btu.pp.ua/random/api.php?type=json',
             encoding: null,
         });
-        const u = /^http/.test(res.data.url)
-            ? res.data.url
-            : `http://img.btu.pp.ua/random/${res.data.url}`;
+        const u = /^http/.test(res.data.url) ?
+            res.data.url :
+            `http://img.btu.pp.ua/random/${res.data.url}`;
         const v = await getCDNLinks(u);
         sendMsg(
-            `@${user} :\n > 小姐姐来了，小心旁边窥屏哦! \n ${
+                `@${user} :\n > 小姐姐来了，小心旁边窥屏哦! \n ${
                 v === u
                     ? '\n![小姐姐](' + v
                     : `图片有效期【${formatTime(
@@ -190,4 +190,20 @@ function sendXJJVideo(user) {
         );
     });
 }
-module.exports = { getXJJ, GetLSPRanking, getSetu, sendXJJVideo };
+/**
+ * 获取天气及笑话
+ * @param {string} user 用户名
+ * @param {string} msg 消息
+ */
+async function getXiaohuaAndTianqi(user,msg){
+    let message = encodeURI(msg)
+        const res = await axios({
+            method: 'get',
+            url:'http://api.qingyunke.com/api.php?key=free&appid=0&msg=' + message
+        })
+        let cb =  res.data.content;
+        cb = cb.replace(/{br}/g,"<br>")
+        cb = cb.replace(/菲菲/g,"小冰")
+        sendMsg(`@${user} :` + cb);
+}
+module.exports = { getXJJ, GetLSPRanking, getSetu, sendXJJVideo,getXiaohuaAndTianqi };
