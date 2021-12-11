@@ -35,7 +35,7 @@ const opt = {
         //非聊天消息
         const msg = dataInfo.md.trim();
         const user = dataInfo.userName;
-        if (['i', 'hxg'].indexOf(user) < 0) {
+        if (['i', 'xiaoIce'].indexOf(user) < 0) {
             console.log(`收到${user}的消息:${msg}`);
             CallBackMsg(user, msg);
         }
@@ -58,6 +58,7 @@ async function CallBackMsg(user, msg) {
         changeFangChenNi,
         changeR18,
         changeFangChenNiWait,
+        setAdmin
     } = require('./settings');
     if (/^(来|滚)吧小冰$/.test(msg)) {
         changeWorkState(user, msg);
@@ -77,7 +78,10 @@ async function CallBackMsg(user, msg) {
         wyydiange(user, msg);
         return;
     }
-
+    if (/^(添加管理|删除管理)/.test(msg)) {
+        setAdmin(user, msg)
+        return;
+    }
     if (/^TTS|^朗读/i.test(msg)) {
         updateLastTime();
         const link =
@@ -125,19 +129,25 @@ async function CallBackMsg(user, msg) {
     } else if (saohua.test(message)) {
         changeSaoHua(user);
     } else if (watchVideo.test(message)) {
+        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
+        return;
         sendXJJVideo(user);
     } else if (fangChenNiWait.test(message)) {
         changeFangChenNiWait(user, message);
     } else if (fangChenNi.test(message)) {
         changeFangChenNi(user, message);
     } else if (xiaojiejie.test(message)) {
+        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
+        return;
         getXJJ(user);
     } else if (setu.test(message)) {
+        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
+        return;
         getSetu(user, message);
     } else if (r18.test(message)) {
         changeR18(user, message);
     } else if (caidan.test(message)) {
-        sendMsg(`@${user} 功能列表:\n
+        sendMsg(`@${user} \n 功能列表:\n
         1. 回复[看妞][小姐姐][来个妞]等查看妹子图片 [接口维护中]❌\n
         2. 回复[涩图]可查看涩图(可在涩图后跟标签查找对应的标签图片 如: 涩图 原神) [接口维护中]❌\n
         (当前插图模式:${
@@ -146,18 +156,17 @@ async function CallBackMsg(user, msg) {
         3. 回复[小姐姐视频]可查看国外小姐姐的视频 [接口维护中]❌\n
         4. 全局发送[TTS+文本]或[朗读+文本]即可朗读(无需关键词)\n
         5. 直接发短语即可聊天。\n
-        6. 回复[xxx天气]可以查询天气
-        7. 回复[笑话]可以随机讲个笑话
+        6. 回复[xxx天气]可以查询天气\n
+        7. 回复[笑话]可以随机讲个笑话\n
         8. 输入[lsp排行]可查看聊天室的lsp排行\n
-        > TIP:为了您的健康和安全，所有的图片视频都已接入“防沉溺系统”，\n
-        > 链接仅保存【${formatTime(
+        9. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...${getResponse()}\n
+        TIP:为了您的健康和安全，所有的图片视频都已接入“防沉溺系统”，
+        链接仅保存【${formatTime(
             conf.api.max_age * 60
-        )}】,管理员可通过[防沉溺时长 时间(单位:分钟)]更改\n
-        > 每次查看后须等待【${formatTime(
+        )}】,管理员可通过[防沉溺时长 时间(单位:分钟)]更改
+        每次查看后须等待【${formatTime(
             conf.rob.lspWaitingTime * 60
-        )}】,管理员可通过[防沉溺等待 时间(单位:分钟)]更改\n\n
-        9. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...\n
-        ${getResponse()}`);
+        )}】,管理员可通过[防沉溺等待 时间(单位:分钟)]更改`);
     } else if (lspranking.test(message)) {
         GetLSPRanking(user);
     } else if(tianqi.test(message)){
@@ -226,15 +235,15 @@ function ChangeSaohuaState(isenable = true) {
 async function updateKey() {
     try {
         const res = await axios({
-            method: 'post',
+            method: 'POST',
             url: 'https://pwl.icu/api/getKey',
             data: {
                 nameOrEmail: conf.PWL.nameOrEmail,
-                userPassword: conf.PWL.userPassword,
+                userPassword: conf.PWL.userPassword
             },
         });
         console.log('updateKey response', res.data);
-        if (res?.data?.Key) {
+        if (res.data.Key) {
             conf.PWL.apiKey = res.data.Key;
             writeConfig(conf, err => {
                 if (err) throw err;

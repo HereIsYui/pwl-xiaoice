@@ -38,7 +38,7 @@ function formatTime(time) {
  */
 async function getCDNLinks(url, isForce = false) {
     try {
-const axios = require('axios');
+        const axios = require('axios');
         const resp = await axios({
             method: 'post',
             url: 'https://proxy.taozhiyu.workers.dev/request/',
@@ -59,4 +59,31 @@ const axios = require('axios');
         return isForce ? `https://proxy.onesrc.workers.dev/?url=${url}` : url;
     }
 }
-module.exports = { formatTime, getCDNLinks };
+
+/**
+ * 删除数组中指定的值
+ * @param {Array} arr 数组
+ * @param {string} value 要删除的值
+ * @returns 删除后的数组
+ */
+function removeArr(arr, value) {
+    let index = indexOfArr(arr, value);
+    if (index > -1) {
+        arr.splice(index, 1);
+    }
+    return arr
+}
+
+/**
+ * 某个值在数组中的位置
+ * @param {Array} arr 数组
+ * @param {string} value 要查找的值
+ * @returns 值所在的下标
+ */
+function indexOfArr(arr, value) {
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i] == value) return i;
+    }
+    return -1;
+}
+module.exports = { formatTime, getCDNLinks, removeArr };
