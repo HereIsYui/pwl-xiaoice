@@ -3,12 +3,15 @@ const { sendMsg } = require('./chat');
 const { getCDNLinks, formatTime } = require('./utils');
 const axios = require('axios');
 const { configInfo: conf } = require('./config');
+const {responseLSP}=require('./strings')
 let lastSetuTime = 0;
 /**
  * 检测倒计时
  * @param {string} user 用户名
  */
 function checkSetuTime(user) {
+    sendMsg(responseLSP(user));
+    return;
     query(
         `SELECT * FROM setu_ranking WHERE userName = '${user}'`,
         function(err, vals) {
@@ -190,20 +193,4 @@ function sendXJJVideo(user) {
         );
     });
 }
-/**
- * 获取天气及笑话
- * @param {string} user 用户名
- * @param {string} msg 消息
- */
-async function getXiaohuaAndTianqi(user,msg){
-    let message = encodeURI(msg)
-        const res = await axios({
-            method: 'get',
-            url:'http://api.qingyunke.com/api.php?key=free&appid=0&msg=' + message
-        })
-        let cb =  res.data.content;
-        cb = cb.replace(/{br}/g,"<br>")
-        cb = cb.replace(/菲菲/g,"小冰")
-        sendMsg(`@${user} :` + cb);
-}
-module.exports = { getXJJ, GetLSPRanking, getSetu, sendXJJVideo,getXiaohuaAndTianqi };
+module.exports = { getXJJ, GetLSPRanking, getSetu, sendXJJVideo };

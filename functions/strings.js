@@ -106,8 +106,29 @@ function randomResponse() {
         '511 Network Authentication Required',
     ]);
 }
+
+/**
+ * 随机返回老涩批返回语
+ * @param {string} user 用户名
+ */
+ function randomRespomseLSP(user) {
+    return getRandomFromArray([
+        `@${user} 干啥啥不行，当lsp第一名`,
+        `@${user} 不给\n![](https://img1.baidu.com/it/u=4171135686,29251773&fm=26&fmt=auto)`,
+        `@${user} 就不给，略略略`,
+        `@${user} 针好康（沉迷其中）`,
+        `@${user} :小姐姐离你而去了，lsp歇歇吧！`,
+        `@${user} ![](https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fws4.sinaimg.cn%2Flarge%2F9150e4e5ly1fuhpptlufpg208c08cgln.gif&refer=http%3A%2F%2Fws4.sinaimg.cn&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1641801508&t=ae796a5435c6a5efa66b7c5a1399e306)`,
+        `@${user} ![](https://img2.baidu.com/it/u=3589572707,540934736&fm=26&fmt=auto)`,
+        `@${user} ![](https://img0.baidu.com/it/u=4052020447,1499918617&fm=26&fmt=auto)`,
+        `@${user} ![](https://img2.baidu.com/it/u=1745399900,1294386194&fm=253&fmt=auto&app=138&f=JPEG?w=192&h=192)`,
+        `@${user} ![](https://img0.baidu.com/it/u=555058826,3577839910&fm=253&fmt=auto&app=138&f=JPEG?w=440&h=441)`,
+        `@${user} ![](https://pwl.stackoverflow.wiki/2021/12/image174932da-bb9fbb0f.png)`,
+    ]);
+}
 module.exports = {
     getSaohua: randomSaoHua,
     getResponse: randomResponse,
     EmptyCall: randomEmptyCall,
+    responseLSP:randomRespomseLSP
 };

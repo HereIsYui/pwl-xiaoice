@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { configInfo: conf } = require('./config');
-
+const { xiaoBingEncode } = require('./utils');
 let updateCookieInterval = 0;
 /**
  * 更新小冰的cookies
@@ -31,7 +31,8 @@ async function wyydiange(user, message) {
             headers: {
                 Host: 'music.163.com',
                 Origin: 'http://music.163.com',
-                'user-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36',
+                'user-agent':
+                    'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36',
                 'Content-Type': 'application/x-www-form-urlencoded',
                 referer: 'http://music.163.com/search/',
             },
@@ -64,8 +65,10 @@ async function getChatData(data) {
                 'content-type': ' application/json;charset=UTF-8',
                 cookie: conf.xiaobing.cookie,
                 origin: 'https://ux-plus.xiaoice.com',
-                referer: 'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+                referer:
+                    'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
+                'user-agent':
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
             },
             data: `{"TraceId":"","PartnerName":"","SubPartnerId":"VirtualGF","Content":{"Text":"${data}","Metadata":{}}}`,
         });
@@ -78,7 +81,7 @@ async function getChatData(data) {
         return cb;
     } catch (error) {
         console.log('不知道什么问题', error);
-        return "小冰的cookie过期了呢~\n菜鸡两个开发还不知道怎么自动更新cookie"
+        return '小冰的cookie过期了呢~\n菜鸡两个开发还不知道怎么自动更新cookie';
     }
 }
 
@@ -92,9 +95,56 @@ function getCookie() {
             cookie: conf.xiaobing.cookie,
             origin: ' https://ux-plus.xiaoice.com',
             referer: ' https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-            'user-agent': ' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+            'user-agent':
+                ' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
         },
     });
 }
 
-module.exports = { updateCookie, wyydiange, getChatData };
+/**
+ * 获取天气及笑话
+ * @param {string} user 用户名
+ * @param {string} msg 消息
+ */
+async function getXiaohuaAndTianqi(user, msg) {
+    const { sendMsg } = require('./chat');
+    let message = encodeURI(msg);
+    const res = await axios({
+        method: 'get',
+        url: 'http://api.qingyunke.com/api.php?key=free&appid=0&msg=' + message,
+    });
+    let cb = res.data.content;
+    cb = cb.replace(/{br}/g, '<br>');
+    cb = cb.replace(/菲菲/g, '小冰');
+    sendMsg(`@${user} :` + cb);
+}
+
+/**
+ * 从微软的接口与小冰聊天
+ * @param {string} msg 消息
+ */
+async function chatWithXiaoBingByBing(msg) {
+    try {
+        const res = await axios({
+            method: 'post',
+            url: 'https://cn.bing.com/english/zochatv2?cc=cn&ensearch=0',
+            data: `{"query":{"NormalizedQuery":"${xiaoBingEncode(
+                msg
+            )}"},"from":"chatbox"}`,
+        });
+        let cb = '';
+        console.log(res.data);
+        cb = res.data.content;
+        return cb;
+    } catch (error) {
+        console.log('不知道什么问题', error);
+        return '新小冰的接口似乎出问题了？不是很懂=_=';
+    }
+}
+module.exports = {
+    updateCookie,
+    wyydiange,
+    getChatData,
+    getXiaohuaAndTianqi,
+    chatWithXiaoBingByBing,
+};
