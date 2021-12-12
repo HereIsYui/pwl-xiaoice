@@ -3,7 +3,7 @@ const { sendMsg } = require('./chat');
 const { getCDNLinks, formatTime } = require('./utils');
 const axios = require('axios');
 const { configInfo: conf } = require('./config');
-const {responseLSP}=require('./strings')
+const { responseLSP } = require('./strings')
 let lastSetuTime = 0;
 /**
  * 检测倒计时
@@ -64,8 +64,8 @@ async function getXJJ(user) {
                 v === u
                     ? '\n![小姐姐](' + v
                     : `图片有效期【${formatTime(
-                          conf.api.max_age*60
-                      )}】\n\n![小姐姐](${v}`
+                        conf.api.max_age*60
+                    )}】\n\n![小姐姐](${v}`
             })`
         );
         return true;

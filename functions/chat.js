@@ -8,11 +8,18 @@ const {
     getXiaohuaAndTianqi,
     chatWithXiaoBingByBing,
 } = require('./other_apis');
+let firstMsg = null;
+let secondMsg = null;
+let xioaIceMsg = null;
+let isSend = false;
 /**
  * 发送消息
  * @param {string} msg 需要发送的消息
  */
 function sendMsg(msg) {
+    xioaIceMsg = msg;
+    if (isSend) return;
+    isSend = true;
     try {
         axios({
             method: 'post',
@@ -21,8 +28,12 @@ function sendMsg(msg) {
                 apiKey: conf.PWL.apiKey,
                 content: msg,
             },
-        });
-    } catch (error) {}
+        }).then(() => {
+            isSend = false
+        })
+    } catch (error) {
+        isSend = false
+    }
 }
 
 const opt = {
@@ -35,13 +46,14 @@ const opt = {
     },
     message(data) {
         const dataInfo = JSON.parse(data.toString('utf8'));
-        if (dataInfo.type !== 'msg') return;
+        if (dataInfo.type !== 'msg' || !dataInfo.md) return;
         //非聊天消息
         const msg = dataInfo.md.trim();
         const user = dataInfo.userName;
         if (!['i', 'xiaoIce'].includes(user)) {
             console.log(`收到${user}的消息:${msg}`);
             CallBackMsg(user, msg);
+
         }
     },
     error() {
@@ -101,14 +113,26 @@ async function CallBackMsg(user, msg) {
                     ? ''
                     : `<br>音频有效期【${formatTime(
                           conf.api.max_age * 60
-                      )}】<br>`
+                    )}】<br>`
             }<audio src='${u}' controls/>`
         );
         return;
     }
+    // 先把茅坑占着 过几天再拉屎
+    if(/^~\s{1}[\u4e00-\u9fa5]{4,}$/.test(msg)){
+        sendMsg(`@${user} 非内测用户，无法使用该指令~`)
+        return;
+    }
     //==================================以是全局指令==================================
 
-    if (!/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i.test(msg)) return;
+    if (!/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i.test(msg)){
+        secondMsg = firstMsg;
+		firstMsg = msg;
+        if(firstMsg == secondMsg && xioaIceMsg != firstMsg){
+            sendMsg(msg)
+        }
+        return;
+    };
 
     console.log('叮~你的小冰被唤醒了');
     // 更新上次讲话时间
@@ -128,26 +152,22 @@ async function CallBackMsg(user, msg) {
     const lspranking = /^lsp排行$/;
     const saohua = /^(别逼逼?了|闭嘴|人呢|在哪儿?呢?)$/;
     const tianqi = /\w*天气$/;
-    const xiaohua = /(\w*笑话|笑话分类)$/;
+    const huoyue = /(当前|现在|今日|水多)(吗|少了)?(活跃)?值?$/;
+    const qiangjie = /(去打劫|发工资)了?吗?$/;
+    const hongbao = /(发个|来个)红包$/;
     if (/^\s*$/.test(message)) {
-        if (Math.random() > 0.8) sendMsg(EmptyCall(user));
+        if (Math.random() > 0.2) sendMsg(EmptyCall(user));
     } else if (saohua.test(message)) {
         changeSaoHua(user);
     } else if (watchVideo.test(message)) {
-        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
-        return;
         sendXJJVideo(user);
     } else if (fangChenNiWait.test(message)) {
         changeFangChenNiWait(user, message);
     } else if (fangChenNi.test(message)) {
         changeFangChenNi(user, message);
     } else if (xiaojiejie.test(message)) {
-        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
-        return;
         getXJJ(user);
     } else if (setu.test(message)) {
-        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
-        return;
         getSetu(user, message);
     } else if (r18.test(message)) {
         changeR18(user, message);
@@ -176,11 +196,32 @@ async function CallBackMsg(user, msg) {
         GetLSPRanking(user);
     } else if(tianqi.test(message)){
         getXiaohuaAndTianqi(user,message)
-    //}else if(xiaohua.test(message)){
-    //    getXiaohuaAndTianqi(user,message)
+    }else if(huoyue.test(message)){
+        let msg = await liveness()
+        sendMsg(`@${user} :小冰当前活跃值为：${msg}`);
+    }else if(qiangjie.test(message)){
+        if(conf.admin.includes(user)){
+            let msg = await salary()
+            let isDajie = !message.match('工资');
+            sendMsg(`@${user} :小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${msg >= 0 ? msg+'点积分~' : '0点积分，不要太贪心哦~'}`);
+        }else{
+            sendMsg(`@${user} :本是要去的，但是转念一想，尚有这么多事情要做，便也就放弃了罢`)
+        }
+    }else if(hongbao.test(message)){
+        if(conf.admin.includes(user)){
+            // 概率暂时设置成5%吧，以后在改成次数限制
+            if (Math.random() > 0.95){
+                let data = { msg: "最！后！一！个！别再剥削我了！！！！", money: 32, count: 5}; 
+                sendMsg(`[redpacket]${JSON.stringify(data)}[/redpacket]`);
+            }else{
+                sendMsg(`@${user} :不给了！不给了！光找我要红包，你倒是给我一个啊！本来工资就不高，还天天剥削我！！！`)
+            }
+        }else{
+            sendMsg(`@${user} :???, 你让我发我就发?`)
+        }
     }else{
        let msg = await chatWithXiaoBingByBing(message); //getChatData(message);
-        sendMsg(`@${user} :` + msg);
+        sendMsg(`@${user} :${msg}`);
     }
 }
 let lastTime = new Date(); //最后一次说话时间
@@ -235,7 +276,7 @@ function ChangeSaohuaState(isenable = true) {
 }
 
 /**
- * 更新获取摸鱼派(https://wpl.icu/)的apiKey
+ * 更新获取摸鱼派(https://pwl.icu/)的apiKey
  */
 async function updateKey() {
     try {
@@ -263,7 +304,7 @@ async function updateKey() {
 
 /**
  * 检测apiKey是否有效
- * @returns {boolean} 摸鱼派(https://wpl.icu/)的apiKey是否有效
+ * @returns {boolean} 摸鱼派(https://pwl.icu/)的apiKey是否有效
  */
 async function checkKey() {
     if (conf.PWL.apiKey === '') return false;
@@ -279,6 +320,41 @@ async function checkKey() {
     }
 }
 
+/**
+ * 获取小冰实时活跃度
+ * @returns {boolean} 摸鱼派(https://pwl.icu/)的小冰实时活跃度
+ */
+async function liveness() {
+    if (conf.PWL.apiKey === '') return false;
+    try {
+        const resp = await axios({
+            method: 'get',
+            url: `https://pwl.icu/user/liveness?apiKey=${conf.PWL.apiKey}`,
+        });
+        return resp.data.liveness;
+    } catch (e) {
+        console.log('PWL活跃债获取错误，错误内容:', e);
+        return false;
+    }
+}
+
+/**
+ * 领取小冰昨日活跃奖励
+ * @returns {boolean} 领取小冰昨日摸鱼派(https://pwl.icu/)的活跃奖励
+ */
+async function salary() {
+    if (conf.PWL.apiKey === '') return false;
+    try {
+        const resp = await axios({
+            method: 'get',
+            url: `https://pwl.icu/activity/yesterday-liveness-reward-api?apiKey=${conf.PWL.apiKey}`,
+        });
+        return resp.data.sum;
+    } catch (e) {
+        console.log('PWL昨日活跃领取错误，错误内容:', e);
+        return false;
+    }
+}
 async function init() {
     axios.default.timeout = 5000;
     //全局5秒超时
@@ -292,4 +368,6 @@ async function init() {
 module.exports = {
     sendMsg,
     init,
+    liveness,
+    salary
 };
