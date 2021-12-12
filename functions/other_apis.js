@@ -31,8 +31,7 @@ async function wyydiange(user, message) {
             headers: {
                 Host: 'music.163.com',
                 Origin: 'http://music.163.com',
-                'user-agent':
-                    'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36',
+                'user-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36',
                 'Content-Type': 'application/x-www-form-urlencoded',
                 referer: 'http://music.163.com/search/',
             },
@@ -65,10 +64,8 @@ async function getChatData(data) {
                 'content-type': ' application/json;charset=UTF-8',
                 cookie: conf.xiaobing.cookie,
                 origin: 'https://ux-plus.xiaoice.com',
-                referer:
-                    'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-                'user-agent':
-                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+                referer: 'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
+                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
             },
             data: `{"TraceId":"","PartnerName":"","SubPartnerId":"VirtualGF","Content":{"Text":"${data}","Metadata":{}}}`,
         });
@@ -95,12 +92,10 @@ function getCookie() {
             cookie: conf.xiaobing.cookie,
             origin: ' https://ux-plus.xiaoice.com',
             referer: ' https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-            'user-agent':
-                ' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+            'user-agent': ' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
         },
     });
 }
-
 /**
  * 获取天气及笑话
  * @param {string} user 用户名

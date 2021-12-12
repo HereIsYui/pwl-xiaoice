@@ -1,15 +1,15 @@
 {
-  "name": "bot_xiaobing",
-  "version": "1.0.0",
-  "description": "摸鱼派官方指定机器人(其实也不是)",
-  "main": "index.js",
-  "author": "含笑阁 & 涛之雨",
-  "license": "MIT",
-  "dependencies": {
-    "axios": "^0.21.1"
-  },
-  "devDependencies": {
-    "mysql": "^2.18.1",
-    "w-websocket-client": "^1.0.22"
-  }
+    "name": "bot_xiaobing",
+    "version": "1.0.0",
+    "description": "摸鱼派官方认证机器人(现在是了)",
+    "main": "index.js",
+    "author": "含笑阁 & 涛之雨",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^0.21.1"
+    },
+    "devDependencies": {
+        "mysql": "^2.18.1",
+        "w-websocket-client": "^1.0.22"
+    }
 }

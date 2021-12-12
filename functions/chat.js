@@ -55,7 +55,7 @@ const opt = {
  */
 async function CallBackMsg(user, msg) {
     updateLastTime(); //有人说话就更新时间
-    const { getXJJ, GetLSPRanking, getSetu, sendXJJVideo } = require('./lsp');
+    const { getXJJ, GetLSPRanking, getSetu, sendXJJVideo, getXiaohuaAndTianqi } = require('./lsp');
     const {
         changeSaoHua,
         changeWorkState,
@@ -90,13 +90,13 @@ async function CallBackMsg(user, msg) {
     if (/^TTS|^朗读/i.test(msg)) {
         updateLastTime();
         const link =
-                Buffer.from(
-                    'aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==',
-                    'base64'
-                ) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, '')),
+            Buffer.from(
+                'aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==',
+                'base64'
+            ) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, '')),
             u = await getCDNLinks(link);
         sendMsg(
-            `@${user} :那你可就听好了<br>${
+                `@${user} :那你可就听好了<br>${
                 u === link
                     ? ''
                     : `<br>音频有效期【${formatTime(
@@ -134,14 +134,20 @@ async function CallBackMsg(user, msg) {
     } else if (saohua.test(message)) {
         changeSaoHua(user);
     } else if (watchVideo.test(message)) {
+        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
+        return;
         sendXJJVideo(user);
     } else if (fangChenNiWait.test(message)) {
         changeFangChenNiWait(user, message);
     } else if (fangChenNi.test(message)) {
         changeFangChenNi(user, message);
     } else if (xiaojiejie.test(message)) {
+        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
+        return;
         getXJJ(user);
     } else if (setu.test(message)) {
+        sendMsg(`@${user} :小姐姐离你而去了，lsp歇歇吧！\n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`)
+        return;
         getSetu(user, message);
     } else if (r18.test(message)) {
         changeR18(user, message);
@@ -158,7 +164,7 @@ async function CallBackMsg(user, msg) {
         6. 回复[xxx天气]可以查询天气\n
         7. 回复[笑话]可以随机讲个笑话\n
         8. 输入[lsp排行]可查看聊天室的lsp排行\n
-        9. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...\n${getResponse()}\n
+        9. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...${getResponse()}\n
         TIP:为了您的健康和安全，所有的图片视频都已接入“防沉溺系统”，
         链接仅保存【${formatTime(
             conf.api.max_age * 60
@@ -168,12 +174,12 @@ async function CallBackMsg(user, msg) {
         )}】,管理员可通过[防沉溺等待 时间(单位:分钟)]更改`);
     } else if (lspranking.test(message)) {
         GetLSPRanking(user);
-    } else if (tianqi.test(message)) {
-        getXiaohuaAndTianqi(user, message);
-    // } else if (xiaohua.test(message)) {
-    //     getXiaohuaAndTianqi(user, message);
-    } else {
-        let msg = await chatWithXiaoBingByBing(message); //getChatData(message);
+    } else if(tianqi.test(message)){
+        getXiaohuaAndTianqi(user,message)
+    //}else if(xiaohua.test(message)){
+    //    getXiaohuaAndTianqi(user,message)
+    }else{
+       let msg = await chatWithXiaoBingByBing(message); //getChatData(message);
         sendMsg(`@${user} :` + msg);
     }
 }
@@ -238,7 +244,7 @@ async function updateKey() {
             url: 'https://pwl.icu/api/getKey',
             data: {
                 nameOrEmail: conf.PWL.nameOrEmail,
-                userPassword: conf.PWL.userPassword,
+                userPassword: conf.PWL.userPassword
             },
         });
         console.log('updateKey response', res.data);

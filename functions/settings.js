@@ -1,5 +1,5 @@
 const { sendMsg } = require('./chat');
-const { formatTime } = require('./utils');
+const { formatTime, removeArr } = require('./utils');
 const { configInfo: conf, writeConfig } = require('./config');
 /**
  * 更改骚话配置
