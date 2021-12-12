@@ -7,7 +7,7 @@ const { configInfo: conf, writeConfig } = require('./config');
  * @param {string} message 消息
  */
 function changeSaoHua(user, message) {
-    if (conf.admin.indexOf(user) >= 0) {
+    if (conf.admin.includes(user)) {
         const turnOff = message.match(/^(别逼逼?了|闭嘴)/);
         conf.rob.enableSaohua = !turnOff;
 
@@ -26,8 +26,8 @@ function changeSaoHua(user, message) {
  * @param {string} message 消息
  */
 function changeWorkState(user, message) {
-    if (conf.admin.indexOf(user) >= 0) {
-        const turnOn = message.indexOf('来吧') >= 0;
+    if (conf.admin.includes(user)) {
+        const turnOn = message.includes('来吧');
         if (conf.rob.working) {
             if (turnOn) {
                 sendMsg(
@@ -39,9 +39,7 @@ function changeWorkState(user, message) {
                 setTimeout(() => {
                     conf.rob.working = true;
                     conf.rob.offWorking = false;
-                    sendMsg(
-                        `@${user} 知错了吗!!\n我不听我不听!`
-                    );
+                    sendMsg(`@${user} 知错了吗!!\n我不听我不听!`);
                 }, 60000);
                 return;
             } else conf.rob.working = false;
@@ -96,7 +94,7 @@ function changeWorkState(user, message) {
  * @param {string} message 消息
  */
 function changeFangChenNi(user, message) {
-    if (conf.admin.indexOf(user) >= 0) {
+    if (conf.admin.includes(user)) {
         let max_age = message.match(/\d+/)[0];
         console.log(max_age);
         if (max_age < 1) {
@@ -134,7 +132,7 @@ function changeFangChenNi(user, message) {
  * @param {string} message 消息
  */
 function changeFangChenNiWait(user, message) {
-    if (conf.admin.indexOf(user) >= 0) {
+    if (conf.admin.includes(user)) {
         let max_age = message.match(/\d+/)[0];
         console.log(max_age);
         if (max_age < 1) {
@@ -172,7 +170,7 @@ function changeFangChenNiWait(user, message) {
  * @param {string} message 消息
  */
 function changeR18(user, message) {
-    if (conf.admin.indexOf(user) >= 0) {
+    if (conf.admin.includes(user)) {
         conf.rob.is18 = !message.match('关闭');
         writeConfig(conf, err => {
             if (err) {
@@ -204,25 +202,22 @@ function changeR18(user, message) {
  * @param {string} message 消息
  */
 function setAdmin(user, message) {
-    if (conf.admin.indexOf(user) >= 0) {
-        let isAdd = !message.match('删除')
+    if (conf.admin.includes(user)) {
+        let isAdd = !message.match('删除');
         let uname = message.substr(4).trim();
+        let index = conf.admin.indexOf(uname);
         if (isAdd) {
-            if (conf.admin.indexOf(uname) >= 0) {
-                sendMsg(`@${user} :${uname}已经是管理了！别加了！当前管理员: ${
-                    conf.admin
-                }`)
+            if (index >= 0) {
+                sendMsg(
+                    `@${user} :${uname}已经是管理了！别加了！当前管理员: ${conf.admin}`
+                );
                 return;
-            }
-            conf.admin.push(uname)
+            } else conf.admin.push(uname);
         } else {
-            if (["Yui", "taozhiyu"].indexOf(uname) >= 0) {
-                sendMsg(`@${user} :超管不可删除！当前管理员: ${
-                    conf.admin
-                }`)
+            if (['Yui', 'taozhiyu'].includes(uname)) {
+                sendMsg(`@${user} :超管不可删除！当前管理员: ${conf.admin}`);
                 return;
-            }
-            conf.admin = removeArr(conf.admin, uname)
+            } else conf.admin.splice(index, 1);
         }
         writeConfig(conf, err => {
             if (err) {
@@ -232,16 +227,10 @@ function setAdmin(user, message) {
                 );
                 throw err;
             }
-            sendMsg(
-                `@${user} :修改成功，当前管理员: ${conf.admin}`
-            );
+            sendMsg(`@${user} :修改成功，当前管理员: ${conf.admin}`);
         });
     } else {
-        sendMsg(
-            `@${user} :暂无权限，当前管理员: ${
-                conf.admin
-            }`
-        );
+        sendMsg(`@${user} :暂无权限，当前管理员: ${conf.admin}`);
     }
 }
 module.exports = {
@@ -250,5 +239,5 @@ module.exports = {
     changeFangChenNi,
     changeR18,
     changeFangChenNiWait,
-    setAdmin
+    setAdmin,
 };

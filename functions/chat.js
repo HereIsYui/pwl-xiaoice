@@ -3,7 +3,11 @@ const WSC = require('w-websocket-client');
 const { configInfo: conf, writeConfig } = require('./config');
 const { getSaohua, getResponse, EmptyCall } = require('./strings');
 const { getCDNLinks, formatTime } = require('./utils');
-const { getChatData } = require('./other_apis');
+const {
+    getChatData,
+    getXiaohuaAndTianqi,
+    chatWithXiaoBingByBing,
+} = require('./other_apis');
 /**
  * 发送消息
  * @param {string} msg 需要发送的消息
@@ -35,7 +39,7 @@ const opt = {
         //非聊天消息
         const msg = dataInfo.md.trim();
         const user = dataInfo.userName;
-        if (['i', 'xiaoIce'].indexOf(user) < 0) {
+        if (!['i', 'xiaoIce'].includes(user)) {
             console.log(`收到${user}的消息:${msg}`);
             CallBackMsg(user, msg);
         }
@@ -58,14 +62,15 @@ async function CallBackMsg(user, msg) {
         changeFangChenNi,
         changeR18,
         changeFangChenNiWait,
-        setAdmin
+        setAdmin,
     } = require('./settings');
     if (/^(来|滚)吧小冰$/.test(msg)) {
         changeWorkState(user, msg);
         return;
     }
     if (conf.rob.offWorking) {
-        Math.random() > 0.5 && sendMsg(`@${user} 我罢工了，别叫我!!!\n喊我我也不理你`);
+        Math.random() > 0.5 &&
+            sendMsg(`@${user} 我罢工了，别叫我!!!\n喊我我也不理你`);
         return;
     }
     if (!conf.rob.working) {
@@ -79,7 +84,7 @@ async function CallBackMsg(user, msg) {
         return;
     }
     if (/^(添加管理|删除管理)/.test(msg)) {
-        setAdmin(user, msg)
+        setAdmin(user, msg);
         return;
     }
     if (/^TTS|^朗读/i.test(msg)) {
@@ -124,7 +129,7 @@ async function CallBackMsg(user, msg) {
     const saohua = /^(别逼逼?了|闭嘴|人呢|在哪儿?呢?)$/;
     const tianqi = /\w*天气$/;
     const xiaohua = /(\w*笑话|笑话分类)$/;
-    if (message === '') {
+    if (/^\s*$/.test(message)) {
         if (Math.random() > 0.8) sendMsg(EmptyCall(user));
     } else if (saohua.test(message)) {
         changeSaoHua(user);
@@ -171,10 +176,10 @@ async function CallBackMsg(user, msg) {
         GetLSPRanking(user);
     } else if(tianqi.test(message)){
         getXiaohuaAndTianqi(user,message)
-    }else if(xiaohua.test(message)){
-        getXiaohuaAndTianqi(user,message)
+    //}else if(xiaohua.test(message)){
+    //    getXiaohuaAndTianqi(user,message)
     }else{
-        let msg = await getChatData(message);
+       let msg = await chatWithXiaoBingByBing(message); //getChatData(message);
         sendMsg(`@${user} :` + msg);
     }
 }

@@ -1,0 +1,28 @@
+{
+    "xiaobing": {
+        "cookie": ""
+    },
+    "PWL": {
+        "nameOrEmail": "",
+        "userPassword": "",
+        "apiKey": ""
+    },
+    "rob": {
+        "is18": true,
+        "working": true,
+        "enableSaohua": true,
+        "lspWaitingTime": 4
+    },
+    "api": {
+        "max_age": 0,
+        "token": ""
+    },
+    "database": {
+        "host": "",
+        "user": "",
+        "password": "",
+        "database": "",
+        "port": 0
+    },
+    "admin": []
+}
