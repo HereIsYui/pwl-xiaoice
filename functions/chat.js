@@ -67,7 +67,7 @@ const opt = {
  */
 async function CallBackMsg(user, msg) {
     updateLastTime(); //有人说话就更新时间
-    const { getXJJ, GetLSPRanking, getSetu, sendXJJVideo, getXiaohuaAndTianqi } = require('./lsp');
+    const { getXJJ, GetLSPRanking, getSetu, sendXJJVideo } = require('./lsp');
     const {
         changeSaoHua,
         changeWorkState,
@@ -217,7 +217,7 @@ async function CallBackMsg(user, msg) {
                 sendMsg(`@${user} :不给了！不给了！光找我要红包，你倒是给我一个啊！本来工资就不高，还天天剥削我！！！`)
             }
         }else{
-            sendMsg(`@${user} :???, 你让我发我就发?`)
+            sendMsg(`@${user} :这件事已不必再提，皆因钱财不够`)
         }
     }else{
        let msg = await chatWithXiaoBingByBing(message); //getChatData(message);
