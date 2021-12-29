@@ -24,5 +24,8 @@
         "database": "",
         "port": 0
     },
-    "admin": []
+    "admin": [],
+	"weather":{
+		"key":""
+	}
 }

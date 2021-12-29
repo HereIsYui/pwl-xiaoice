@@ -122,7 +122,6 @@ function randomRespomseLSP(user) {
         `@${user} \n ![小姐姐](https://img2.baidu.com/it/u=3589572707,540934736&fm=26&fmt=auto)`,
         `@${user} \n ![小姐姐](https://img0.baidu.com/it/u=4052020447,1499918617&fm=26&fmt=auto)`,
         `@${user} \n ![小姐姐](https://img2.baidu.com/it/u=1745399900,1294386194&fm=253&fmt=auto&app=138&f=JPEG?w=192&h=192)`,
-        `@${user} \n ![小姐姐](https://img0.baidu.com/it/u=555058826,3577839910&fm=253&fmt=auto&app=138&f=JPEG?w=440&h=441)`,
         `@${user} \n ![小姐姐](https://pwl.stackoverflow.wiki/2021/12/image174932da-bb9fbb0f.png)`,
     ]);
 }
