@@ -46,7 +46,7 @@ async function wyydiange(user, message) {
 		});
 		let mid = res.data.result.songs[0].id;
 		sendMsg(
-			`@${user} :\n >滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=298 height=52 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=32"></iframe>`
+			`@${user} :\n >滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=66"></iframe>`
 		);
 		return true;
 	} catch (error) {
@@ -146,23 +146,45 @@ function getXiaohuaAndTianqi(user, msg) {
 						try {
 							let weatherData = res.data.result;
 							let weather = weatherData.daily.temperature;
+							let weatherCode = weatherData.daily.skycon;
 							let alertInfo = weatherData.alert.content;
 							let cb = `\n ${adr}:${weatherData.forecast_keypoint}`;
 							let msg = "\n 天气信息： \n";
 							if (date == "明天") {
-								msg +=
-									`${date}：${weather[1].min}℃~${weather[1].max}℃\n`
+								let ndate = new Date(weather[1].date);
+								let m = ndate.getMonth()+1;
+								let d = ndate.getDate();
+							let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${weatherCode[1].value}&a=${Math.ceil(weather[1].avg)}`
+								msg +=`<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`
 							} else if (date == "后天") {
-								msg +=
-									`${date}：${weather[2].min}℃~${weather[2].max}℃\n`
+							let ndate = new Date(weather[2].date);
+								let m = ndate.getMonth()+1;
+								let d = ndate.getDate();
+							let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${weatherCode[2].value}&a=${Math.ceil(weather[2].avg)}`
+								msg +=`<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`
 							} else if (date == "大后天") {
-								msg +=
-									`${date}：${weather[3].min}℃~${weather[3].max}℃\n`
+							let ndate = new Date(weather[3].date);
+								let m = ndate.getMonth()+1;
+								let d = ndate.getDate();
+							let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${weatherCode[3].value}&a=${Math.ceil(weather[3].avg)}`
+								msg +=`<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`
 							} else {
-								weather.forEach(item => {
-									msg +=
-										`${new Date(item.date).toLocaleDateString()}：${item.min}℃~${item.max}℃\n`
-								})
+							    let date = [];
+							    let weatherCodeList = [];
+							    let max = [];
+							    let min = [];
+							    for(let i = 0; i < 5; i++){
+									
+							        let ndate = new Date(weather[i].date);
+							        let m = ndate.getMonth()+1;
+								    let d = ndate.getDate();
+								    date.push(`${m}/${d}`);
+								    weatherCodeList.push(weatherCode[i].value);
+								    max.push(weather[i].max)
+								    min.push(weather[i].min)
+							    }
+							    let url = `https://www.lingmx.com/card/index2.html?date=${date.join(",")}&weatherCode=${weatherCodeList.join(",")}&max=${max.join(",")}&min=${min.join(",")}`
+							    msg +=`<iframe src="${url}" width="380" height="310" frameborder="0"></iframe> \n`;
 							}
 							if (alertInfo.length > 0) {
 								msg += "\n --- \n"
