@@ -3,6 +3,7 @@ const WSC = require('w-websocket-client');
 const { configInfo: conf, writeConfig } = require('./config');
 const { getSaohua, getResponse, EmptyCall } = require('./strings');
 const { getCDNLinks, formatTime } = require('./utils');
+const { analysis } = require('../game/index');
 const {
     getChatData,
     getXiaohuaAndTianqi,
@@ -67,7 +68,7 @@ const opt = {
  */
 async function CallBackMsg(user, msg) {
     updateLastTime(); //有人说话就更新时间
-    const { getXJJ, GetLSPRanking, getSetu, sendXJJVideo } = require('./lsp');
+    const { getXJJ, GetLSPRanking, getSetu, } = require('./lsp');
     const {
         changeSaoHua,
         changeWorkState,
@@ -120,7 +121,12 @@ async function CallBackMsg(user, msg) {
     }
     // 先把茅坑占着 过几天再拉屎
     if(/^~\s{1}[\u4e00-\u9fa5]{4,}$/.test(msg)){
-        sendMsg(`@${user} 非内测用户，无法使用该指令~`)
+        if(conf.admin.includes(user)){
+            let cb = analysis(user,msg)
+            sendMsg(cb)
+        }else{
+            sendMsg(`@${user} 非内测用户，无法使用该指令~`)
+        }
         return;
     }
     //==================================以是全局指令==================================
