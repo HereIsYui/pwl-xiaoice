@@ -104,3 +104,4 @@ dist
 .tern-port
 package-lock.json
 config_dev.json
+game/

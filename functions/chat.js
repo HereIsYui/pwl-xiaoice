@@ -3,7 +3,7 @@ const WSC = require('w-websocket-client');
 const { configInfo: conf, writeConfig } = require('./config');
 const { getSaohua, getResponse, EmptyCall } = require('./strings');
 const { getCDNLinks, formatTime } = require('./utils');
-const { analysis } = require('../game/index');
+// const { analysis } = require('../game/index');
 const {
     getChatData,
     getXiaohuaAndTianqi,
@@ -24,7 +24,7 @@ function sendMsg(msg) {
     try {
         axios({
             method: 'post',
-            url: 'https://pwl.icu/chat-room/send',
+            url: 'https://fishpi.cn/chat-room/send',
             data: {
                 apiKey: conf.PWL.apiKey,
                 content: msg,
@@ -38,7 +38,7 @@ function sendMsg(msg) {
 }
 
 const opt = {
-    url: `wss://pwl.icu/chat-room-channel?apiKey=${conf.PWL.apiKey}`,
+    url: `wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`,
     open() {
         console.log('嘀~你的小冰已上线!');
     },
@@ -122,8 +122,8 @@ async function CallBackMsg(user, msg) {
     // 先把茅坑占着 过几天再拉屎
     if(/^~\s{1}[\u4e00-\u9fa5]{4,}$/.test(msg)){
         if(conf.admin.includes(user)){
-            let cb = analysis(user,msg)
-            sendMsg(cb)
+            // let cb = analysis(user,msg)
+            // sendMsg(cb)
         }else{
             sendMsg(`@${user} 非内测用户，无法使用该指令~`)
         }
@@ -282,13 +282,13 @@ function ChangeSaohuaState(isenable = true) {
 }
 
 /**
- * 更新获取摸鱼派(https://pwl.icu/)的apiKey
+ * 更新获取摸鱼派(https://fishpi.cn/)的apiKey
  */
 async function updateKey() {
     try {
         const res = await axios({
             method: 'POST',
-            url: 'https://pwl.icu/api/getKey',
+            url: 'https://fishpi.cn/api/getKey',
             data: {
                 nameOrEmail: conf.PWL.nameOrEmail,
                 userPassword: conf.PWL.userPassword
@@ -310,14 +310,14 @@ async function updateKey() {
 
 /**
  * 检测apiKey是否有效
- * @returns {boolean} 摸鱼派(https://pwl.icu/)的apiKey是否有效
+ * @returns {boolean} 摸鱼派(https://fishpi.cn/)的apiKey是否有效
  */
 async function checkKey() {
     if (conf.PWL.apiKey === '') return false;
     try {
         const resp = await axios({
             method: 'get',
-            url: `https://pwl.icu/api/user?apiKey=${conf.PWL.apiKey}`,
+            url: `https://fishpi.cn/api/user?apiKey=${conf.PWL.apiKey}`,
         });
         return resp.data.code === 0;
     } catch (e) {
@@ -328,14 +328,14 @@ async function checkKey() {
 
 /**
  * 获取小冰实时活跃度
- * @returns {boolean} 摸鱼派(https://pwl.icu/)的小冰实时活跃度
+ * @returns {boolean} 摸鱼派(https://fishpi.cn/)的小冰实时活跃度
  */
 async function liveness() {
     if (conf.PWL.apiKey === '') return false;
     try {
         const resp = await axios({
             method: 'get',
-            url: `https://pwl.icu/user/liveness?apiKey=${conf.PWL.apiKey}`,
+            url: `https://fishpi.cn/user/liveness?apiKey=${conf.PWL.apiKey}`,
         });
         return resp.data.liveness;
     } catch (e) {
@@ -346,14 +346,14 @@ async function liveness() {
 
 /**
  * 领取小冰昨日活跃奖励
- * @returns {boolean} 领取小冰昨日摸鱼派(https://pwl.icu/)的活跃奖励
+ * @returns {boolean} 领取小冰昨日摸鱼派(https://fishpi.cn/)的活跃奖励
  */
 async function salary() {
     if (conf.PWL.apiKey === '') return false;
     try {
         const resp = await axios({
             method: 'get',
-            url: `https://pwl.icu/activity/yesterday-liveness-reward-api?apiKey=${conf.PWL.apiKey}`,
+            url: `https://fishpi.cn/activity/yesterday-liveness-reward-api?apiKey=${conf.PWL.apiKey}`,
         });
         return resp.data.sum;
     } catch (e) {
