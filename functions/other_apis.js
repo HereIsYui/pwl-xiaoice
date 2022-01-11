@@ -27,9 +27,6 @@ function updateCookie(iscancle = false) {
  * @returns 查询是否成功
  */
 async function wyydiange(user, message) {
-    const {
-        sendMsg
-    } = require('./chat');
     let msg = message.substr(message.indexOf('点歌') + 2).trim();
     msg = encodeURI(msg);
     try {
@@ -45,14 +42,11 @@ async function wyydiange(user, message) {
             url: `http://music.163.com/api/search/get/web?csrf_token&hlpretag&hlposttag&s=${msg}&type=1&offset=0&total=true&limit=1`,
         });
         let mid = res.data.result.songs[0].id;
-        sendMsg(
-            `@${user} :\n >滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=66"></iframe>`
-        );
-        return true;
+        let cb = `>滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=66"></iframe>`
+        return cb;
     } catch (error) {
         console.log(error);
-        sendMsg(`@${user} :\n 你丫的这首歌太难找了!换一个!`);
-        return false;
+        return "你丫的这首歌太难找了!换一个!";
     }
 }
 
@@ -110,9 +104,6 @@ function getCookie() {
  * @param {string} msg 消息
  */
 function getXiaohuaAndTianqi(user, msg) {
-    const {
-        sendMsg
-    } = require('./chat');
     let dateReg = /(今天|明天|后天|大后天)*天气$/
     let date = msg.match(dateReg)[1];
     let adr = "";
@@ -122,8 +113,7 @@ function getXiaohuaAndTianqi(user, msg) {
         adr = msg.substr(0, msg.indexOf("天气"))
     }
     if (!adr) {
-        sendMsg(`@${user} : 你查询了一个寂寞~ \n 天气指令：小冰 地点[时间]天气`);
-        return;
+        return "你查询了一个寂寞~ \n 天气指令：小冰 地点[时间]天气";
     }
     console.log(JSON.stringify({
         addr: adr.split("").join("%"),
@@ -136,7 +126,7 @@ function getXiaohuaAndTianqi(user, msg) {
                 console.log('checkSetuTime出错:', err);
             } else {
                 if (vals.length == 0) {
-                    sendMsg(`@${user} : 未查询到地点：${adr}`);
+                    return `未查询到地点：${adr}`
                 } else {
                     const res = await axios({
                         method: 'get',
@@ -168,16 +158,16 @@ function getXiaohuaAndTianqi(user, msg) {
 
                             }
                             let warningCode = {
-                                "01": {name:"蓝色",color:"blue"},
-                                "02": {name:"黄色",color:"yellow"},
-                                "03": {name:"橙色",color:"orange"},
-                                "04": {name:"红色",color:"red"},
+                                "01": { name: "蓝色", color: "blue" },
+                                "02": { name: "黄色", color: "yellow" },
+                                "03": { name: "橙色", color: "orange" },
+                                "04": { name: "红色", color: "red" },
                             }
                             let cb = `\n ${adr}:${weatherData.forecast_keypoint}`;
                             let msg = "";
                             if (alertInfo.length > 0) {
                                 alertInfo.forEach(items => {
-                                    let  code = items.code.split("");
+                                    let code = items.code.split("");
                                     items.code1 = code[0] + code[1];
                                     items.code2 = code[2] + code[3];
                                     msg += `<img src="https://img.shields.io/badge/-${levelCode[items.code1]}-${warningCode[items.code2].color}">`
@@ -226,27 +216,18 @@ function getXiaohuaAndTianqi(user, msg) {
                                 let url = `https://www.lingmx.com/card/index2.html?date=${date.join(",")}&weatherCode=${weatherCodeList.join(",")}&max=${max.join(",")}&min=${min.join(",")}&t=${adr}&st=${weatherData.forecast_keypoint}`
                                 msg += `<iframe src="${url}" width="380" height="370" frameborder="0"></iframe> \n`;
                             }
-                            sendMsg(`@${user} : \n ${msg}`);
+                            return msg
                         } catch (e) {
                             console.log("查询天气异常：" + JSON.stringify(e))
-                            sendMsg(`@${user} : 小冰的天气接口出错了哦~`);
+                            return "小冰的天气接口出错了哦~"
                         }
                     } else {
-                        sendMsg(`@${user} : 小冰的天气接口出错了哦~`);
+                        return "小冰的天气接口出错了哦~"
                     }
                 }
             }
         }
     );
-    // let message = encodeURI(msg);
-    // const res = await axios({
-    //     method: 'get',
-    //     url: 'http://api.qingyunke.com/api.php?key=free&appid=0&msg=' + message,
-    // });
-    // let cb = res.data.content;
-    // cb = cb.replace(/{br}/g, '<br>');
-    // cb = cb.replace(/菲菲/g, '小冰');
-    // sendMsg(`@${user} :` + cb);
 }
 
 /**

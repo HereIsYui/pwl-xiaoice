@@ -59,19 +59,16 @@ async function getXJJ(user) {
             res.data.url :
             `http://img.btu.pp.ua/random/${res.data.url}`;
         const v = await getCDNLinks(u);
-        sendMsg(
-                `@${user} :\n > 小姐姐来了，小心旁边窥屏哦! \n ${
-                v === u
-                    ? '\n![小姐姐](' + v
-                    : `图片有效期【${formatTime(
-                        conf.api.max_age*60
-                    )}】\n\n![小姐姐](${v}`
-            })`
-        );
-        return true;
+        let cb = `> 小姐姐来了，小心旁边窥屏哦! \n ${
+            v === u
+                ? '\n![小姐姐](' + v
+                : `图片有效期【${formatTime(
+                    conf.api.max_age*60
+                )}】\n\n![小姐姐](${v}`
+        })`
+        return cb;
     } catch (error) {
-        sendMsg(`@${user} :\n 不知道出了什么错误，小姐姐来不了! `);
-        return false;
+        return "不知道出了什么错误，小姐姐来不了! ";
     }
 }
 /**
@@ -83,11 +80,11 @@ function GetLSPRanking(user) {
         `SELECT userName,setu_times FROM setu_ranking ORDER BY setu_times DESC LIMIT 0,10`,
         function (err, vals) {
             if (err) {
-                sendMsg(`@${user} :lsp排行榜查询失败！`);
+                return "lsp排行榜查询失败！";
             } else {
-                let msg = `> LSP排行榜 \n`;
+                let cb = `> LSP排行榜 \n`;
                 vals.forEach((item, index) => {
-                    msg += `${index + 1}.  @${item.userName} 共计查询 ${
+                    cb += `${index + 1}.  @${item.userName} 共计查询 ${
                         item.setu_times
                     } 次 ${
                         index == 0
@@ -95,7 +92,7 @@ function GetLSPRanking(user) {
                             : ''
                     }\n`;
                 });
-                sendMsg(`@${user} :\n ${msg}`);
+                return cb;
             }
         }
     );
@@ -124,21 +121,20 @@ async function getSetu(user, msg) {
             },
         });
         if (res.data.data.length == 0) {
-            sendMsg(`@${user} :想啥呢，没有!`);
+            let cb = "想啥呢，没有!";
+            return cb;
         } else {
             const sta = await getCDNLinks(res.data.data[0].urls.small, true);
-            sendMsg(
-                `@${user} :\n > 涩图来了!看不到的请不要看了${
-                    res.data.data[0].urls.small === sta
-                        ? ''
-                        : `<br>链接有效期为【${formatTime(conf.api.max_age*60)}】`
-                }<br>![涩图](${sta})`
-            );
+            let cb = `> 涩图来了!看不到的请不要看了${
+                res.data.data[0].urls.small === sta
+                    ? ''
+                    : `<br>链接有效期为【${formatTime(conf.api.max_age*60)}】`
+            }<br>![涩图](${sta})`
+            return cb;
         }
         return;
     } catch (error) {
-        sendMsg(`@${user} :已读，不回!`);
-        return;
+        return "已读，不回!"
     }
 }
 /**
@@ -162,7 +158,7 @@ function getVideoLink(callback) {
                     .then(resp => {
                         resp.status === 200
                             ? (console.log('└链接状态正常'),
-                              typeof callback === 'function' && callback(res))
+                            typeof callback === 'function' && callback(res))
                             : getVideoLink(callback);
                     })
                     .catch(() => {
@@ -181,16 +177,15 @@ function getVideoLink(callback) {
  */
 function sendXJJVideo(user) {
     if (!checkSetuTime(user)) return;
-    sendMsg(`@${user} :正在获取链接并检测链接活性，请稍等几秒`);
+    // sendMsg(`@${user} :正在获取链接并检测链接活性，请稍等几秒`);
     getVideoLink(async res => {
         const sta = await getCDNLinks(res);
-        sendMsg(
-            `@${user} :\n > 小姐姐来喽，请在方便的时候查看<br>${
-                res === sta
-                    ? ''
-                    : `视频有效期【${formatTime(conf.api.max_age*60)}】<br>`
-            }<br><video controls src='${sta}'/>`
-        );
+        let cb = `@${user} :\n > 小姐姐来喽，请在方便的时候查看<br>${
+            res === sta
+                ? ''
+                : `视频有效期【${formatTime(conf.api.max_age*60)}】<br>`
+        }<br><video controls src='${sta}'/>`;
+        return cb;
     });
 }
 module.exports = { getXJJ, GetLSPRanking, getSetu, sendXJJVideo };

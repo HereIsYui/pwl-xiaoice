@@ -10,15 +10,10 @@ function changeSaoHua(user, message) {
     if (conf.admin.includes(user)) {
         const turnOff = message.match(/^(别逼逼?了|闭嘴)/);
         conf.rob.enableSaohua = !turnOff;
-
-        sendMsg(
-            `@${user} ${
-                turnOff ? '好啦好啦，我不说了还不行吗:doge:' : '我在这:huaji:'
-            }`
-        );
-    } else sendMsg(`@${user} 你以为谁都可以设置的吗？\n我就不听，略略略略略`);
-    // if (Math.random() > 0.95) sendMsg(getSaohua());
-    //5%几率回复，彩蛋算是吧
+        return turnOff ? '好啦好啦，我不说了还不行吗:doge:' : '我在这:huaji:'
+    } else {
+        return "你以为谁都可以设置的吗？\n我就不听，略略略略略"
+    }
 }
 /**
  * 更改机器人开关状态
@@ -30,27 +25,18 @@ function changeWorkState(user, message) {
         const turnOn = message.includes('来吧');
         if (conf.rob.working) {
             if (turnOn) {
-                sendMsg(
-                    `@${user} 我明明就在还让我来。。。\n
-                我这么没有存在感吗?(／‵Д′)／~ ╧╧\n
-                不理你了!`
-                );
+                let cb = `我明明就在还让我来。。。\n 我这么没有存在感吗?(／‵Д′)／~ ╧╧ \n 不理你了!`
                 conf.rob.offWorking = true;
                 setTimeout(() => {
                     conf.rob.working = true;
                     conf.rob.offWorking = false;
                     sendMsg(`@${user} 知错了吗!!\n我不听我不听!`);
                 }, 60000);
-                return;
+                return cb;
             } else conf.rob.working = false;
         } else {
             if (!turnOn) {
-                sendMsg(
-                    `@${user} 我明明都多在旁边瑟瑟发抖不敢说话了，\n
-                还让我闭嘴。。。\n\n
-                我有这么讨厌吗?\n\n
-                不让我说我偏说!`
-                );
+                let cb = "我明明都多在旁边瑟瑟发抖不敢说话了，\n 还让我闭嘴。。。\n\n 我有这么讨厌吗?\n\n 不让我说我偏说!"
                 conf.rob.working = false;
                 setTimeout(() => {
                     sendMsg(`@${user} 知错了吗!!`);
@@ -61,31 +47,19 @@ function changeWorkState(user, message) {
                         }, 5000);
                     }, 3000);
                 }, 3000);
-                return;
+                return cb;
             } else conf.rob.working = true;
         }
         writeConfig(conf, err => {
             if (err) {
-                sendMsg(
-                    `@${user} 修改出错! 请查看日志，机器人已停止运行\n
-                        当前状态:${
-                            conf.rob.working ? '[打开]✅' : '[关闭]❌'
-                        }(机器人都停止运行了,这个还有什么意义吗喂?)`
-                );
-                throw err;
+                console.log(JSON.stringify(err))
+                return `修改出错! 请查看日志，机器人已停止运行 \n 当前状态:${ conf.rob.working ? '[打开]✅' : '[关闭]❌'}(机器人都停止运行了,这个还有什么意义吗喂?)`
             }
-            sendMsg(
-                `@${user} 修改成功，当前状态:${
-                    conf.rob.working ? '[打开]✅' : '[关闭]❌'
-                }`
-            );
+            return `修改成功，当前状态:${conf.rob.working ? '[打开]✅' : '[关闭]❌'}`
         });
-    } else
-        sendMsg(
-            `@${user} 宁配吗?宁有权限吗，当前状态:${
-                conf.rob.working ? '[打开]✅' : '[关闭]❌'
-            }`
-        );
+    } else {
+        return `宁配吗?宁有权限吗，当前状态:${conf.rob.working ? '[打开]✅' : '[关闭]❌'}`
+    }
 }
 
 /**
@@ -98,32 +72,19 @@ function changeFangChenNi(user, message) {
         let max_age = message.match(/\d+/)[0];
         console.log(max_age);
         if (max_age < 1) {
-            sendMsg(`@${user} :想啥呢！最少1分钟！`);
-            return;
+            return "想啥呢！最少1分钟！";
         }
         conf.api.max_age = max_age;
         writeConfig(conf, err => {
             if (err) {
-                sendMsg(
-                    `@${user} :修改出错! 请查看日志，机器人已停止运行\n
-                        当前防沉溺时间:${formatTime(
-                            conf.api.max_age * 60
-                        )}(机器人都停止运行了,这个还有什么意义吗喂?)`
-                );
-                throw err;
+                console.log(JSON.stringify(err))
+                return `修改出错! 请查看日志，机器人已停止运行 \n 当前防沉溺时间:${formatTime(conf.api.max_age * 60)}(机器人都停止运行了,这个还有什么意义吗喂?)`
             }
-            sendMsg(
-                `@${user} :修改成功，当前防沉溺时间:${formatTime(
-                    conf.api.max_age * 60
-                )}`
-            );
+            return `修改成功，当前防沉溺时间:${formatTime(conf.api.max_age * 60)}`
         });
-    } else
-        sendMsg(
-            `@${user} :暂无权限，当前防沉溺时间:${formatTime(
-                conf.api.max_age * 60
-            )}`
-        );
+    } else {
+        return `暂无权限，当前防沉溺时间:${formatTime(conf.api.max_age * 60)}`
+    }
 }
 
 /**
@@ -136,33 +97,21 @@ function changeFangChenNiWait(user, message) {
         let max_age = message.match(/\d+/)[0];
         console.log(max_age);
         if (max_age < 1) {
-            sendMsg(`@${user} :想啥呢！最少1分钟！`);
-            return;
+            return "想啥呢！最少1分钟！";
         }
         conf.rob.lspWaitingTime = max_age;
         writeConfig(conf, err => {
             if (err) {
-                sendMsg(
-                    `@${user} :修改出错! 请查看日志，机器人已停止运行\n
-                        当前防沉溺等待:${formatTime(
-                            conf.rob.lspWaitingTime * 60
-                        )}(机器人都停止运行了,这个还有什么意义吗喂?)`
-                );
-                throw err;
+                console.log(JSON.stringify(err))
+                return `修改出错! 请查看日志，机器人已停止运行\n当前防沉溺等待:${formatTime(conf.rob.lspWaitingTime * 60)}(机器人都停止运行了,这个还有什么意义吗喂?)`
             }
-            sendMsg(
-                `@${user} :修改成功，当前防沉溺等待:${formatTime(
-                    conf.rob.lspWaitingTime * 60
-                )}`
-            );
+            return `修改成功，当前防沉溺等待:${formatTime(conf.rob.lspWaitingTime * 60)}`
         });
-    } else
-        sendMsg(
-            `@${user} :暂无权限，当前防沉溺等待:${formatTime(
-                conf.rob.lspWaitingTime * 60
-            )}`
-        );
+    } else {
+        return `暂无权限，当前防沉溺等待:${formatTime(conf.rob.lspWaitingTime * 60)}`
+    }
 }
+
 
 /**
  * 更改R18开关
@@ -174,26 +123,13 @@ function changeR18(user, message) {
         conf.rob.is18 = !message.match('关闭');
         writeConfig(conf, err => {
             if (err) {
-                sendMsg(
-                    `@${user} :修改出错! 请查看日志，机器人已停止运行\n
-                        当前插图模式:${
-                            conf.rob.is18 ? 'lsp模式' : '绅士模式'
-                        }(机器人都停止运行了,这个还有什么意义吗喂?)`
-                );
-                throw err;
+                console.log(JSON.stringify(err))
+                return `修改出错! 请查看日志，机器人已停止运行 \n 当前插图模式:${conf.rob.is18 ? 'lsp模式' : '绅士模式'}(机器人都停止运行了,这个还有什么意义吗喂?)`
             }
-            sendMsg(
-                `@${user} :修改成功，当前插图模式:${
-                    conf.rob.is18 ? 'lsp模式' : '绅士模式'
-                }`
-            );
+            return `修改成功，当前插图模式:${conf.rob.is18 ? 'lsp模式' : '绅士模式'}`
         });
     } else
-        sendMsg(
-            `@${user} :暂无权限，当前插图模式:${
-                conf.rob.is18 ? 'lsp模式' : '绅士模式'
-            }`
-        );
+        return `暂无权限，当前插图模式:${conf.rob.is18 ? 'lsp模式' : '绅士模式'}`
 }
 
 /**
@@ -208,29 +144,27 @@ function setAdmin(user, message) {
         let index = conf.admin.indexOf(uname);
         if (isAdd) {
             if (index >= 0) {
-                sendMsg(
-                    `@${user} :${uname}已经是管理了！别加了！当前管理员: ${conf.admin}`
-                );
-                return;
-            } else conf.admin.push(uname);
+                return `${uname}已经是管理了！别加了！当前管理员: ${conf.admin}`;
+            } else {
+                conf.admin.push(uname);
+            }
         } else {
             if (['Yui', 'taozhiyu'].includes(uname)) {
-                sendMsg(`@${user} :超管不可删除！当前管理员: ${conf.admin}`);
-                return;
-            } else conf.admin.splice(index, 1);
+                return `超管不可删除！当前管理员: ${conf.admin}`;
+            } else if (index >= 0) {
+                conf.admin.splice(index, 1)
+            } else {
+                return `${uname}不是管理了！不用删除！当前管理员: ${conf.admin}`;
+            }
         }
         writeConfig(conf, err => {
             if (err) {
-                sendMsg(
-                    `@${user} :修改出错! 请查看日志，机器人已停止运行\n
-                        当前当前管理员: ${conf.admin}(机器人都停止运行了,这个还有什么意义吗喂?)`
-                );
-                throw err;
+                return `修改出错! 请查看日志，机器人已停止运行\n 当前当前管理员: ${conf.admin}(机器人都停止运行了,这个还有什么意义吗喂?)`
             }
-            sendMsg(`@${user} :修改成功，当前管理员: ${conf.admin}`);
+            return `修改成功，当前管理员: ${conf.admin}`
         });
     } else {
-        sendMsg(`@${user} :暂无权限，当前管理员: ${conf.admin}`);
+        return `暂无权限，当前管理员: ${conf.admin}`
     }
 }
 module.exports = {
