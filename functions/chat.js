@@ -46,7 +46,7 @@ function sendMsg(msg) {
 		isSend = false
 	}
 }
-
+var oIdList = [];
 const opt = {
 	url: `wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`,
 	open() {
@@ -60,7 +60,13 @@ const opt = {
 		if (dataInfo.type !== 'msg' || !dataInfo.md) return;
 		//非聊天消息
 		const msg = dataInfo.md.trim();
+		const oId = dataInfo.oId;
+		oIdList.unshift(oId);
+		if (oIdList.length > 2000) {
+			oIdList.splice(1000, oIdList.length - 1)
+		}
 		const user = dataInfo.userName;
+		console.log(user + ":" + oId)
 		if (!['i', 'xiaoIce'].includes(user)) {
 			console.log(`收到${user}的消息:${msg}`);
 			CallBackMsg(user, msg);
@@ -177,6 +183,7 @@ async function CallBackMsg(user, msg) {
 	const huoyue = /(当前|现在|今日|水多)(吗|少了)?(活跃)?值?$/;
 	const qiangjie = /(去打劫|发工资)了?吗?$/;
 	const hongbao = /(发个|来个)红包$/;
+	const deleteMsg = /撤回\d*$/;
 	if (/^\s*$/.test(message)) {
 		if (Math.random() > 0.2) sendMsg(EmptyCall(user));
 	} else if (saohua.test(message)) {
@@ -248,6 +255,25 @@ async function CallBackMsg(user, msg) {
 			}
 		} else {
 			sendMsg(`@${user} :这件事已不必再提，皆因钱财不够`)
+		}
+	} else if (deleteMsg.test(message)) {
+		if (conf.admin.includes(user)) {
+			let num = message.substr(message.indexOf('撤回') + 2).trim();
+			try {
+				num = parseInt(num);
+				console.log(num);
+				let deleteList = oIdList.splice(0, num);
+				console.log(deleteList);
+				deleteList.forEach(async function(oId) {
+					let msg = await DeleteMsg(oId)
+					console.log(msg)
+				})
+				sendMsg(`@${user} :撤回完成，共计撤回${num}条消息。`);
+			} catch (e) {
+				sendMsg(`@${user} :撤回失败，请检查日志。`);
+			}
+		} else {
+			sendMsg(`@${user} :暂无权限~`);
 		}
 	} else {
 		let msg = await chatWithXiaoBingByBing(message); //getChatData(message);
@@ -385,6 +411,27 @@ async function salary() {
 		return false;
 	}
 }
+/**
+ * 撤回消息
+ * @returns {boolean} 领取小冰昨日摸鱼派(https://fishpi.cn/)的活跃奖励
+ */
+async function DeleteMsg(oId) {
+	if (conf.PWL.apiKey === '') return false;
+	try {
+		const resp = await axios({
+			method: 'DELETE',
+			url: `https://fishpi.cn/chat-room/revoke/${oId}`,
+			data: {
+				apiKey: conf.PWL.apiKey
+			}
+		});
+		return resp.data;
+	} catch (e) {
+		console.log('撤回消息失败:', e);
+		return false;
+	}
+}
+
 async function init() {
 	axios.default.timeout = 5000;
 	//全局5秒超时

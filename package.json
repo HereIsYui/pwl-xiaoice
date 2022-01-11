@@ -1,15 +1,21 @@
 {
-    "name": "bot_xiaobing",
-    "version": "1.0.0",
-    "description": "摸鱼派官方认证机器人(现在是了)",
-    "main": "index.js",
-    "author": "含笑阁 & 涛之雨",
-    "license": "MIT",
-    "dependencies": {
-        "axios": "^0.21.1"
-    },
-    "devDependencies": {
-        "mysql": "^2.18.1",
-        "w-websocket-client": "^1.0.22"
-    }
+  "name": "bot_xiaoice",
+  "version": "1.0.0",
+  "description": "摸鱼派官方认证机器人(现在是了)",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rLingMX/pwl-xiaoice.git"
+  },
+  "author": "含笑阁 & 涛之雨",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rLingMX/pwl-xiaoice/issues"
+  },
+  "homepage": "https://github.com/rLingMX/pwl-xiaoice#readme",
+  "devDependencies": {
+    "axios": "^0.24.0",
+    "mysql": "^2.18.1",
+    "w-websocket-client": "^1.0.23"
+  }
 }
