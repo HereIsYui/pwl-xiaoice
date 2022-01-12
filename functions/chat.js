@@ -1,23 +1,23 @@
 const axios = require('axios');
 const WSC = require('w-websocket-client');
 const {
-    configInfo: conf,
-    writeConfig
+	configInfo: conf,
+	writeConfig
 } = require('./config');
 const {
-    getSaohua,
-    getResponse,
-    EmptyCall
+	getSaohua,
+	getResponse,
+	EmptyCall
 } = require('./strings');
 const {
-    getCDNLinks,
-    formatTime
+	getCDNLinks,
+	formatTime
 } = require('./utils');
 // const { analysis } = require('../game/index');
 const {
-    getChatData,
-    getXiaohuaAndTianqi,
-    chatWithXiaoBingByBing,
+	getChatData,
+	getXiaohuaAndTianqi,
+	chatWithXiaoBingByBing,
 } = require('./other_apis');
 let firstMsg = null;
 let secondMsg = null;
@@ -28,54 +28,54 @@ let isSend = false;
  * @param {string} msg 需要发送的消息
  */
 function sendMsg(msg) {
-    xioaIceMsg = msg;
-    if (isSend) return;
-    isSend = true;
-    try {
-        axios({
-            method: 'post',
-            url: 'https://fishpi.cn/chat-room/send',
-            data: {
-                apiKey: conf.PWL.apiKey,
-                content: msg,
-            },
-        }).then(() => {
-            isSend = false
-        })
-    } catch (error) {
-        isSend = false
-    }
+	xioaIceMsg = msg;
+	if (isSend) return;
+	isSend = true;
+	try {
+		axios({
+			method: 'post',
+			url: 'https://fishpi.cn/chat-room/send',
+			data: {
+				apiKey: conf.PWL.apiKey,
+				content: msg,
+			},
+		}).then(() => {
+			isSend = false
+		})
+	} catch (error) {
+		isSend = false
+	}
 }
 var oIdList = [];
 const opt = {
-    url: `wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`,
-    open() {
-        console.log('嘀~你的小冰已上线!');
-    },
-    close() {
-        console.log('嘀~你的小冰已掉线!');
-    },
-    message(data) {
-        const dataInfo = JSON.parse(data.toString('utf8'));
-        if (dataInfo.type !== 'msg' || !dataInfo.md) return;
-        //非聊天消息
-        const msg = dataInfo.md.trim();
-        const oId = dataInfo.oId;
-        oIdList.unshift(oId);
-        if (oIdList.length > 2000) {
-            oIdList.splice(1000, oIdList.length - 1)
-        }
-        const user = dataInfo.userName;
-        // console.log(user + ":" + oId)
-        if (!['i', 'xiaoIce'].includes(user)) {
-            console.log(`收到${user}的消息:${msg}`);
-            CallBackMsg(user, msg);
+	url: `wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`,
+	open() {
+		console.log('嘀~你的小冰已上线!');
+	},
+	close() {
+		console.log('嘀~你的小冰已掉线!');
+	},
+	message(data) {
+		const dataInfo = JSON.parse(data.toString('utf8'));
+		if (dataInfo.type !== 'msg' || !dataInfo.md) return;
+		//非聊天消息
+		const msg = dataInfo.md.trim();
+		const oId = dataInfo.oId;
+		oIdList.unshift(oId);
+		if (oIdList.length > 2000) {
+			oIdList.splice(1000, oIdList.length - 1)
+		}
+		const user = dataInfo.userName;
+		// console.log(user + ":" + oId)
+		if (!['i', 'xiaoIce'].includes(user)) {
+			console.log(`收到${user}的消息:${msg}`);
+			CallBackMsg(user, msg);
 
-        }
-    },
-    error() {
-        console.log('嘀~你的小冰尝试连接失败!');
-    },
+		}
+	},
+	error() {
+		console.log('嘀~你的小冰尝试连接失败!');
+	},
 };
 /**
  * 接收到的消息判断分发
@@ -83,49 +83,48 @@ const opt = {
  * @param {string} msg 接收到用户的消息
  */
 async function CallBackMsg(user, msg) {
-    updateLastTime(); //有人说话就更新时间
-    const {
-        getXJJ,
-        GetLSPRanking,
-        getSetu,
-    } = require('./lsp');
-    const {
-        changeSaoHua,
-        changeWorkState,
-        changeFangChenNi,
-        changeR18,
-        changeFangChenNiWait,
-        setAdmin,
-    } = require('./settings');
+	updateLastTime(); //有人说话就更新时间
+	const {
+		getXJJ,
+		GetLSPRanking,
+		getSetu,
+		sendXJJVideo
+	} = require('./lsp');
+	const {
+		changeSaoHua,
+		changeWorkState,
+		changeFangChenNi,
+		changeR18,
+		changeFangChenNiWait,
+		setAdmin,
+	} = require('./settings');
 
-    var cb = "";
-    var isRedPacket = false;
-    if (/^(来|滚)吧小冰$/.test(msg)) {
-        cb = await changeWorkState(user, msg);
-    } else if (conf.rob.offWorking && Math.random() > 0.5) {
-        cb = "我罢工了，别叫我!!!\n喊我我也不理你"
-    } else if (/^点歌/.test(msg)) {
-        updateLastTime();
-        const {
-            wyydiange
-        } = require('./other_apis');
-        cb = await wyydiange(user, msg);
-    } else if (/^(添加管理|删除管理)/.test(msg)) {
-        cb = await setAdmin(user, msg);
-        console.log(cb)
-    } else if (/^TTS|^朗读/i.test(msg)) {
-        updateLastTime();
-        const link =
-            Buffer.from(
-                'aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==',
-                'base64'
-            ) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, '')),
-            u = await getCDNLinks(link);
-        cb = `那你可就听好了<br>${u === link
-				? ''
-				: `<br>音频有效期【${formatTime(
-					conf.api.max_age * 60
-				)}】<br>`
+	var cb = "";
+	var isRedPacket = false;
+	if (/^(来|滚)吧小冰$/.test(msg)) {
+		cb = await changeWorkState(user, msg);
+	} else if (/^点歌/.test(msg)) {
+		updateLastTime();
+		const {
+			wyydiange
+		} = require('./other_apis');
+		cb = await wyydiange(user, msg);
+	} else if (/^(添加管理|删除管理)/.test(msg)) {
+		cb = await setAdmin(user, msg);
+		console.log(cb)
+	} else if (/^TTS|^朗读/i.test(msg)) {
+		updateLastTime();
+		const link =
+			Buffer.from(
+				'aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==',
+				'base64'
+			) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, '')),
+			u = await getCDNLinks(link);
+		cb = `那你可就听好了<br>${u === link
+			? ''
+			: `<br>音频有效期【${formatTime(
+				conf.api.max_age * 60
+			)}】<br>`
 			}<audio src='${u}' controls/>`
 	} else if (/^~\s{1}[\u4e00-\u9fa5]{4,}$/.test(msg)) {
 		// 先把茅坑占着 过几天再拉屎
@@ -136,7 +135,7 @@ async function CallBackMsg(user, msg) {
 			cb = "非内测用户，无法使用该指令~";
 		}
 		//==================================以是全局指令==================================
-	} else if(/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i.test(msg)){
+	} else if (/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i.test(msg)) {
 		console.log('叮~你的小冰被唤醒了');
 		// 更新上次讲话时间
 		let message = msg.replace(/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i, '');
@@ -257,10 +256,14 @@ async function CallBackMsg(user, msg) {
 		}
 	}
 
-	if (isRedPacket) {
-		sendMsg(cb)
-	} else {
-		sendMsg(`${user} :\n ${cb}`)
+	if (cb) {
+		if (isRedPacket) {
+			sendMsg(cb)
+			cb = "";
+		} else {
+			sendMsg(`${user} :\n ${cb}`)
+			cb = "";
+		}
 	}
 }
 let lastTime = new Date(); //最后一次说话时间
