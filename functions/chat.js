@@ -55,7 +55,7 @@ const opt = {
 	close() {
 		console.log('嘀~你的小冰已掉线!');
 	},
-	message(data) {
+	async message(data) {
 		const dataInfo = JSON.parse(data.toString('utf8'));
 		if (dataInfo.type !== 'msg' || !dataInfo.md) return;
 		//非聊天消息
@@ -69,8 +69,8 @@ const opt = {
 		// console.log(user + ":" + oId)
 		if (!['i', 'xiaoIce'].includes(user)) {
 			console.log(`收到${user}的消息:${msg}`);
-			CallBackMsg(user, msg);
-
+			let cb = await CallBackMsg(user, msg);
+			sendMsg(cb)
 		}
 	},
 	error() {
@@ -82,7 +82,7 @@ const opt = {
  * @param {string} user 用户名
  * @param {string} msg 接收到用户的消息
  */
-async function CallBackMsg(user, msg) {
+async function CallBackMsg(user, msg, key) {
 	updateLastTime(); //有人说话就更新时间
 	const {
 		getXJJ,
@@ -165,15 +165,15 @@ async function CallBackMsg(user, msg) {
 		} else if (saohua.test(message)) {
 			cb = await changeSaoHua(user);
 		} else if (watchVideo.test(message)) {
-			cb = await sendXJJVideo(user);
+			cb = await sendXJJVideo(user,key);
 		} else if (fangChenNiWait.test(message)) {
 			cb = await changeFangChenNiWait(user, message);
 		} else if (fangChenNi.test(message)) {
 			cb = await changeFangChenNi(user, message);
 		} else if (xiaojiejie.test(message)) {
-			cb = await getXJJ(user);
+			cb = await getXJJ(user, key);
 		} else if (setu.test(message)) {
-			cb = await getSetu(user, message);
+			cb = await getSetu(user, message,key);
 		} else if (r18.test(message)) {
 			cb = await changeR18(user, message);
 		} else if (caidan.test(message)) {
@@ -240,7 +240,7 @@ async function CallBackMsg(user, msg) {
 					// console.log(num);
 					let deleteList = oIdList.splice(0, num);
 					// console.log(deleteList);
-					deleteList.forEach(async function (oId) {
+					deleteList.forEach(async function(oId) {
 						DeleteMsg(oId)
 						// console.log(msg)
 					})
@@ -258,10 +258,10 @@ async function CallBackMsg(user, msg) {
 
 	if (cb) {
 		if (isRedPacket) {
-			sendMsg(cb)
+			return cb
 			cb = "";
 		} else {
-			sendMsg(`${user} :\n ${cb}`)
+			return `@${user} :\n ${cb}`
 			cb = "";
 		}
 	}
@@ -432,5 +432,6 @@ module.exports = {
 	sendMsg,
 	init,
 	liveness,
-	salary
+	salary,
+	CallBackMsg
 };

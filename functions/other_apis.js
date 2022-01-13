@@ -99,7 +99,7 @@ function getCookie() {
     });
 }
 /**
- * 获取天气及笑话
+ * 获取天气
  * @param {string} user 用户名
  * @param {string} msg 消息
  */
@@ -246,7 +246,7 @@ async function chatWithXiaoBingByBing(msg) {
             )}"},"from":"chatbox"}`,
         });
         let cb = '';
-        console.log(res.data);
+        // console.log(res.data);
         cb = res.data.content;
         return cb;
     } catch (error) {
