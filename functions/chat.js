@@ -13,7 +13,7 @@ const {
 	getCDNLinks,
 	formatTime
 } = require('./utils');
-// const { analysis } = require('../game/index');
+const { analysis } = require('../game/index');
 const {
 	getChatData,
 	getXiaohuaAndTianqi,
@@ -23,6 +23,8 @@ let firstMsg = null;
 let secondMsg = null;
 let xioaIceMsg = null;
 let isSend = false;
+let wsObj = null;
+let wsInterval = null;
 /**
  * 发送消息
  * @param {string} msg 需要发送的消息
@@ -39,8 +41,18 @@ function sendMsg(msg) {
 				apiKey: conf.PWL.apiKey,
 				content: msg,
 			},
-		}).then(() => {
+		}).then((res) => {
 			isSend = false
+			if (res.data.code == -1) {
+				// apiKey 过期
+				wsObj = null;
+				wsObj.close();
+				init();
+			}
+		}).catch(err => {
+			wsObj = null;
+			wsObj.close();
+			init();
 		})
 	} catch (error) {
 		isSend = false
@@ -51,9 +63,15 @@ const opt = {
 	url: `wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`,
 	open() {
 		console.log('嘀~你的小冰已上线!');
+		clearInterval(wsInterval);
 	},
 	close() {
 		console.log('嘀~你的小冰已掉线!');
+		wsObj = null;
+		wsInterval = setInterval(() => {
+			console.log('小冰正在尝试重新连接...' + new Date());
+			init();
+		}, 5 * 1000);
 	},
 	async message(data) {
 		const dataInfo = JSON.parse(data.toString('utf8'));
@@ -70,7 +88,7 @@ const opt = {
 		if (!['i', 'xiaoIce'].includes(user)) {
 			console.log(`收到${user}的消息:${msg}`);
 			let cb = await CallBackMsg(user, msg);
-			sendMsg(cb)
+			cb && sendMsg(cb)
 		}
 	},
 	error() {
@@ -101,6 +119,7 @@ async function CallBackMsg(user, msg, key) {
 
 	var cb = "";
 	var isRedPacket = false;
+	/*
 	if (/^(来|滚)吧小冰$/.test(msg)) {
 		cb = await changeWorkState(user, msg);
 	} else if (/^点歌/.test(msg)) {
@@ -126,16 +145,18 @@ async function CallBackMsg(user, msg, key) {
 				conf.api.max_age * 60
 			)}】<br>`
 			}<audio src='${u}' controls/>`
-	} else if (/^~\s{1}[\u4e00-\u9fa5]{4,}$/.test(msg)) {
+	} else */
+	if (/^~\s{1}[\u4e00-\u9fa5]{4,}$/.test(msg)) {
 		// 先把茅坑占着 过几天再拉屎
 		if (conf.admin.includes(user)) {
-			// let cb = analysis(user,msg)
+			cb = analysis(user,msg)
 			// sendMsg(cb)
 		} else {
 			cb = "非内测用户，无法使用该指令~";
 		}
 		//==================================以是全局指令==================================
-	} else if (/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i.test(msg)) {
+	} 
+	/* else  if (/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i.test(msg)) {
 		console.log('叮~你的小冰被唤醒了');
 		// 更新上次讲话时间
 		let message = msg.replace(/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i, '');
@@ -165,7 +186,7 @@ async function CallBackMsg(user, msg, key) {
 		} else if (saohua.test(message)) {
 			cb = await changeSaoHua(user);
 		} else if (watchVideo.test(message)) {
-			cb = await sendXJJVideo(user,key);
+			cb = await sendXJJVideo(user, key);
 		} else if (fangChenNiWait.test(message)) {
 			cb = await changeFangChenNiWait(user, message);
 		} else if (fangChenNi.test(message)) {
@@ -173,29 +194,11 @@ async function CallBackMsg(user, msg, key) {
 		} else if (xiaojiejie.test(message)) {
 			cb = await getXJJ(user, key);
 		} else if (setu.test(message)) {
-			cb = await getSetu(user, message,key);
+			cb = await getSetu(user, message, key);
 		} else if (r18.test(message)) {
 			cb = await changeR18(user, message);
 		} else if (caidan.test(message)) {
-			cb = `功能列表:\n
-        1. 回复[看妞][小姐姐][来个妞]等查看妹子图片 [接口维护中]❌\n
-        2. 回复[涩图]可查看涩图(可在涩图后跟标签查找对应的标签图片 如: 涩图 原神) [接口维护中]❌\n
-        (当前插图模式:${conf.rob.is18 ? 'lsp模式' : '绅士模式'
-				} 可输入[打开/关闭r18]切换)\n
-        3. 回复[小姐姐视频]可查看国外小姐姐的视频 [接口维护中]❌\n
-        4. 全局发送[TTS+文本]或[朗读+文本]即可朗读(无需关键词)\n
-        5. 直接发短语即可聊天。\n
-        6. 回复[xxx天气]可以查询天气\n
-        7. 回复[笑话]可以随机讲个笑话\n
-        8. 输入[lsp排行]可查看聊天室的lsp排行\n
-        9. [来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...${getResponse()}\n
-        TIP:为了您的健康和安全，所有的图片视频都已接入“防沉溺系统”，
-        链接仅保存【${formatTime(
-					conf.api.max_age * 60
-				)}】,管理员可通过[防沉溺时长 时间(单位:分钟)]更改
-        每次查看后须等待【${formatTime(
-					conf.rob.lspWaitingTime * 60
-				)}】,管理员可通过[防沉溺等待 时间(单位:分钟)]更改`;
+			cb = `功能列表:\n 非全局指令,需以唤醒词开头,如[小冰 指令] \n 1. 直接发短语即可聊天。\n 2. 回复[xxx天气]可以查询天气 可加[今天|明天|后天|大后天]关键词 \n 3. 回复[笑话]可以随机讲个笑话 \n 4. 输入[lsp排行]可查看聊天室的lsp排行 \n\n 全局指令,不用带唤醒词 \n 1. 发送[TTS+文本]或[朗读+文本]即可朗读(无需关键词)\n 2. 发送[来吧/滚吧小冰]可以设置打开/关闭小冰，当前状态...${getResponse()}`;
 		} else if (lspranking.test(message)) {
 			cb = await GetLSPRanking(user);
 		} else if (tianqi.test(message)) {
@@ -240,7 +243,7 @@ async function CallBackMsg(user, msg, key) {
 					// console.log(num);
 					let deleteList = oIdList.splice(0, num);
 					// console.log(deleteList);
-					deleteList.forEach(async function(oId) {
+					deleteList.forEach(async function (oId) {
 						DeleteMsg(oId)
 						// console.log(msg)
 					})
@@ -254,7 +257,7 @@ async function CallBackMsg(user, msg, key) {
 		} else {
 			cb = await chatWithXiaoBingByBing(message); //getChatData(message);
 		}
-	}
+	}*/
 
 	if (cb) {
 		if (isRedPacket) {
@@ -310,7 +313,7 @@ function ChangeSaohuaState(isenable = true) {
 	if (isenable) {
 		saohuaInterval = setInterval(() => {
 			autoSaohua();
-		}, 1 * 6 * 1000);
+		}, 10 * 60 * 1000);
 	} else {
 		clearInterval(saohuaInterval);
 		saohuaInterval = 0;
@@ -425,7 +428,7 @@ async function init() {
 		console.log('CK已过期');
 		await updateKey();
 	}
-	new WSC(opt);
+	wsObj = new WSC(opt);
 	ChangeSaohuaState();
 }
 module.exports = {
