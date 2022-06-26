@@ -1,5 +1,3 @@
-const { sendMsg } = require('./chat');
-const { formatTime, removeArr } = require('./utils');
 const { configInfo: conf, writeConfig } = require('./config');
 /**
  * 更改骚话配置
@@ -15,91 +13,6 @@ function changeSaoHua(user, message) {
         return "你以为谁都可以设置的吗？\n我就不听，略略略略略"
     }
 }
-/**
- * 更改机器人开关状态
- * @param {string} user 用户名
- * @param {string} message 消息
- */
-function changeWorkState(user, message) {
-    return new Promise((resolve, reject) => {
-        if (conf.admin.includes(user)) {
-            const turnOn = message.includes('来吧');
-            if (turnOn) {
-                conf.rob.working = true;
-            } else {
-                conf.rob.working = false;
-            }
-            writeConfig(conf, err => {
-                if (err) {
-                    console.log(JSON.stringify(err))
-                    resolve(`修改出错! 请查看日志，机器人已停止运行 \n 当前状态:${conf.rob.working ? '[打开]✅' : '[关闭]❌'}(机器人都停止运行了,这个还有什么意义吗喂?)`)
-                } else {
-                    resolve(`修改成功，当前状态:${conf.rob.working ? '[打开]✅' : '[关闭]❌'}`)
-                }
-            });
-        } else {
-            resolve(`宁配吗?宁有权限吗，当前状态:${conf.rob.working ? '[打开]✅' : '[关闭]❌'}`)
-        }
-    })
-}
-
-/**
- * 更改防沉溺CDN时长
- * @param {string} user 用户名
- * @param {string} message 消息
- */
-function changeFangChenNi(user, message) {
-    return new Promise((resolve, reject) => {
-        if (conf.admin.includes(user)) {
-            let max_age = message.match(/\d+/)[0];
-            console.log(max_age);
-            if (max_age < 1) {
-                return "想啥呢！最少1分钟！";
-            }
-            conf.api.max_age = max_age;
-            writeConfig(conf, err => {
-                if (err) {
-                    console.log(JSON.stringify(err))
-                    resolve(`修改出错! 请查看日志，机器人已停止运行 \n 当前防沉溺时间:${formatTime(conf.api.max_age * 60)}(机器人都停止运行了,这个还有什么意义吗喂?)`)
-                } else {
-                    resolve(`修改成功，当前防沉溺时间:${formatTime(conf.api.max_age * 60)}`)
-                }
-
-            });
-        } else {
-            resolve(`暂无权限，当前防沉溺时间:${formatTime(conf.api.max_age * 60)}`)
-        }
-    })
-}
-
-/**
- * 更改防沉溺等待时间
- * @param {string} user 用户名
- * @param {string} message 消息
- */
-function changeFangChenNiWait(user, message) {
-    return new Promise((resolve, reject) => {
-        if (conf.admin.includes(user)) {
-            let max_age = message.match(/\d+/)[0];
-            console.log(max_age);
-            if (max_age < 1) {
-                return "想啥呢！最少1分钟！";
-            }
-            conf.rob.lspWaitingTime = max_age;
-            writeConfig(conf, err => {
-                if (err) {
-                    console.log(JSON.stringify(err))
-                    resolve(`修改出错! 请查看日志，机器人已停止运行\n当前防沉溺等待:${formatTime(conf.rob.lspWaitingTime * 60)}(机器人都停止运行了,这个还有什么意义吗喂?)`)
-                } else {
-                    resolve(`修改成功，当前防沉溺等待:${formatTime(conf.rob.lspWaitingTime * 60)}`)
-                }
-            });
-        } else {
-            resolve(`暂无权限，当前防沉溺等待:${formatTime(conf.rob.lspWaitingTime * 60)}`)
-        }
-    })
-}
-
 
 /**
  * 更改R18开关
@@ -165,9 +78,6 @@ function setAdmin(user, message) {
 }
 module.exports = {
     changeSaoHua,
-    changeWorkState,
-    changeFangChenNi,
     changeR18,
-    changeFangChenNiWait,
     setAdmin,
 };

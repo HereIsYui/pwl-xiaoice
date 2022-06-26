@@ -1,6 +1,22 @@
-const { configInfo: conf } = require('./config');
+const {
+    configInfo: conf
+} = require('./config');
 const axios = require('axios');
-
+/**
+ * 发送消息
+ * @param {string} msg 需要发送的消息
+ */
+function sendMsg(msg) {
+    xioaIceMsg = msg;
+    axios({
+        method: 'post',
+        url: 'https://fishpi.cn/chat-room/send',
+        data: {
+            apiKey: conf.PWL.apiKey,
+            content: msg,
+        },
+    })
+}
 /**
  * 日期、时间格式化
  * @param {Date} time 需要转换的时间
@@ -69,23 +85,25 @@ function xiaoBingEncode(word) {
     !(function (r) {
         function o(r, o) {
             for (
-                var n, u, c = o.length / 4 - 1, i = [[], [], [], []], h = 0;
-                h < 16;
-                h++
+                var n, u, c = o.length / 4 - 1, i = [
+                    [],
+                    [],
+                    [],
+                    []
+                ], h = 0; h < 16; h++
             )
                 i[h % 4][Math.floor(h / 4)] = r[h];
             for (i = a(i, o, 0, 4), n = 1; n < c; n++)
                 i = a((i = t((i = f((i = e(i, 4)), 4)))), o, n, 4);
             for (
                 i = a((i = f((i = e(i, 4)), 4)), o, c, 4),
-                    u = new Array(16),
-                    h = 0;
-                h < 16;
-                h++
+                u = new Array(16),
+                h = 0; h < 16; h++
             )
                 u[h] = i[h % 4][Math.floor(h / 4)];
             return u;
         }
+
         function n(r) {
             for (
                 var o,
@@ -94,12 +112,10 @@ function xiaoBingEncode(word) {
                     f = e + 6,
                     t = new Array(4 * (f + 1)),
                     a = new Array(4),
-                    i = 0;
-                i < e;
-                i++
+                    i = 0; i < e; i++
             )
                 (o = [r[4 * i], r[4 * i + 1], r[4 * i + 2], r[4 * i + 3]]),
-                    (t[i] = o);
+                (t[i] = o);
             for (i = e; i < 4 * (f + 1); i++) {
                 for (t[i] = new Array(4), n = 0; n < 4; n++) a[n] = t[i - 1][n];
                 if (i % e == 0)
@@ -109,11 +125,13 @@ function xiaoBingEncode(word) {
             }
             return t;
         }
+
         function e(r, o) {
             for (var n, e = 0; e < 4; e++)
                 for (n = 0; n < o; n++) r[e][n] = h[r[e][n]];
             return r;
         }
+
         function f(r, o) {
             for (var n, e = new Array(4), f = 1; f < 4; f++) {
                 for (n = 0; n < 4; n++) e[n] = r[f][(n + f) % o];
@@ -121,34 +139,39 @@ function xiaoBingEncode(word) {
             }
             return r;
         }
+
         function t(r) {
             for (var o, n, e, f = 0; f < 4; f++) {
                 for (o = new Array(4), n = new Array(4), e = 0; e < 4; e++)
                     (o[e] = r[e][f]),
-                        (n[e] =
-                            128 & r[e][f]
-                                ? (r[e][f] << 1) ^ 283
-                                : r[e][f] << 1);
+                    (n[e] =
+                        128 & r[e][f] ?
+                        (r[e][f] << 1) ^ 283 :
+                        r[e][f] << 1);
                 (r[0][f] = n[0] ^ o[1] ^ n[1] ^ o[2] ^ o[3]),
-                    (r[1][f] = o[0] ^ n[1] ^ o[2] ^ n[2] ^ o[3]),
-                    (r[2][f] = o[0] ^ o[1] ^ n[2] ^ o[3] ^ n[3]),
-                    (r[3][f] = o[0] ^ n[0] ^ o[1] ^ o[2] ^ n[3]);
+                (r[1][f] = o[0] ^ n[1] ^ o[2] ^ n[2] ^ o[3]),
+                (r[2][f] = o[0] ^ o[1] ^ n[2] ^ o[3] ^ n[3]),
+                (r[3][f] = o[0] ^ n[0] ^ o[1] ^ o[2] ^ n[3]);
             }
             return r;
         }
+
         function a(r, o, n, e) {
             for (var f, t = 0; t < 4; t++)
                 for (f = 0; f < e; f++) r[t][f] ^= o[4 * n + f][t];
             return r;
         }
+
         function u(r) {
             for (var o = 0; o < 4; o++) r[o] = h[r[o]];
             return r;
         }
+
         function c(r) {
             for (var o = r[0], n = 0; n < 3; n++) r[n] = r[n + 1];
             return (r[3] = o), r;
         }
+
         function i(r) {
             return r
                 .replace(/[\u0080-\u07ff]/g, function (r) {
@@ -202,9 +225,7 @@ function xiaoBingEncode(word) {
             var t, a, u, c, h, A, v;
             if (128 != f && 192 != f && 256 != f) return '';
             for (
-                r = i(r), e = i(e), t = f / 8, a = new Array(t), v = 0;
-                v < t;
-                v++
+                r = i(r), e = i(e), t = f / 8, a = new Array(t), v = 0; v < t; v++
             )
                 a[v] = isNaN(e.charCodeAt(v)) ? 0 : e.charCodeAt(v);
             u = (u = o(a, n(a))).concat(u.slice(0, t - 16));
@@ -229,7 +250,7 @@ function xiaoBingEncode(word) {
                     j = new Array(S);
                 for (v = 0; v < S; v++)
                     (j[v] = M[v] ^ r.charCodeAt(16 * h + v)),
-                        (j[v] = String.fromCharCode(j[v]));
+                    (j[v] = String.fromCharCode(j[v]));
                 s[h] = j.join('');
             }
             return (function (r) {
@@ -253,9 +274,7 @@ function xiaoBingEncode(word) {
                             'e',
                             'f',
                         ],
-                        e = 0;
-                    e < r.length;
-                    e++
+                        e = 0; e < r.length; e++
                 )
                     o += n[r.charCodeAt(e) >> 4] + n[15 & r.charCodeAt(e)];
                 return o;
@@ -265,4 +284,9 @@ function xiaoBingEncode(word) {
     return a.e(word, '3d9d5f16-5df0-43d7-902e-19274eecdc41', 256);
 }
 
-module.exports = { formatTime, getCDNLinks, xiaoBingEncode};
+module.exports = {
+    formatTime,
+    getCDNLinks,
+    xiaoBingEncode,
+    sendMsg
+};

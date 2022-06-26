@@ -6,11 +6,15 @@ const {
 	init,
 	CallBackMsg
 } = require('./functions/chat');
-// const { updateCookie } = require('./functions/other_apis');
+const {
+	sendMsg
+} = require('./functions/utils');
+const { GetXiaoIceGameRanking } = require('./functions/lsp');
+
 //初始化WS
 init();
 // 每5分钟检测一次 已有新欢，旧爱拜拜
-// updateCookie();
+
 router.get('/GetImage', async function(req, res) {
 	var url = req.query.url;
 	url = decodeURI(url);
@@ -42,7 +46,7 @@ router.get('/API', async function(req, res) {
 			msg: "缺少参数"
 		});
 	} else {
-		if (/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i.test(msg) && /(小姐姐视频)|([涩色]图)|(看妞|小姐姐|照片|来个妞)/.test(msg)) {
+		if (/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i.test(msg)) {
 			var cb = await CallBackMsg(user, msg, "API")
 			res.send({
 				code: 200,
@@ -56,6 +60,53 @@ router.get('/API', async function(req, res) {
 		}
 	}
 })
+router.get('/XiaoIceSendMsg', async function(req, res) {
+	var msg = decodeURI(req.query.msg);
+	var key = req.query.key;
+	if (!msg || key != "xiaoIceGame") {
+		res.send({
+			code: 201,
+			msg: "缺少参数"
+		});
+	} else {
+		sendMsg(msg)
+		res.send({
+		    code:200,
+		    msg:"ok"
+		})
+	}
+})
+
+router.get('/GetXiaoIceGameRank', async function(req, res) {
+    var type = req.query.type;
+	var key = req.query.key;
+	if (key != "xiaoIceGame") {
+		res.send({
+			code: 201,
+			msg: "缺少参数"
+		});
+	} else {
+		let cb = await GetXiaoIceGameRanking(type)
+		res.send({
+		    code:200,
+		    msg:"ok",
+		    data:cb
+		})
+	}
+})
+
+
+app.all('*', function(req, res, next) {
+	//设为指定的域
+	res.header('Access-Control-Allow-Origin', "*");
+	res.header("Access-Control-Allow-Headers", "X-Requested-With");
+	res.header('Access-Control-Allow-Headers', 'Content-Type');
+	res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+	res.header('Access-Control-Allow-Credentials', true);
+	res.header("X-Powered-By", ' 3.2.1');
+	next();
+});
+
 app.use('/', router);
 app.listen(3002, function() {
 	console.log('YTNF-Server Start at:' + 3002);

@@ -1,8 +1,6 @@
 const query = require('./database/mysql');
 const {
-	sendMsg
-} = require('./chat');
-const {
+	sendMsg,
 	getCDNLinks,
 	formatTime
 } = require('./utils');
@@ -14,6 +12,54 @@ const {
 	responseLSP
 } = require('./strings')
 let lastSetuTime = 0;
+/**
+ * 获取排名
+ * @param {string} user 用户名
+ */
+function GetXiaoIceGameRank(user) {
+	return new Promise((resolve, reject) => {
+		query(
+			`SELECT uname,lvfilter,exp FROM game_user_info WHERE uname != "Yui" AND uname != "xiaoIce" ORDER BY exp DESC LIMIT 0,10`,
+			function(err, vals) {
+				if (err) {
+					resolve("等级排行榜查询失败！");
+				} else {
+					let msg = `<table><caption align="top">等级排行榜</caption><tr><th>排名</th><th>玩家</th><th>等级</th><th>经验</th></tr>`;
+                    vals.forEach((item,index) => {
+                        msg += `<tr><td>${index + 1}</td><td>${item.uname}</td><td>${item.lvfilter}</td><td>${item.exp}</td></tr>`
+                    })
+                    msg += "</table>"
+					resolve(msg);
+				}
+			}
+		);
+	})
+}
+function GetXiaoIceGameRanking(type) {
+    let byType = "gui.exp";
+    if(type == 0){
+        byType = "gui.exp"
+    }else if(type == 1){
+        byType = "gud.dieTimes"
+    }else if(type == 2){
+        byType = "gud.allExTimes"
+    }else if(type == 3){
+        byType = "gud.allBsTimes"
+    }
+    let sql = `SELECT gui.uname,gui.family,gui.exp,gui.lvfilter,gud.bsTimes,gud.exTimes,gud.allBsTimes,gud.allExTimes,gud.dieTimes FROM game_user_info AS gui,game_user_detail AS gud WHERE gui.uname = gud.uname AND gui.delete_flag = 0 ORDER BY ${byType} DESC LIMIT 0,64`
+	return new Promise((resolve, reject) => {
+		query(
+			sql,
+			function(err, vals) {
+				if (err) {
+					resolve("查询失败！");
+				} else {
+					resolve(vals);
+				}
+			}
+		);
+	})
+}
 /**
  * 检测倒计时
  * @param {string} user 用户名
@@ -63,7 +109,7 @@ async function getXJJ(user, key) {
 		if (!checkSetuTime(user, key)) return;
 		const res = await axios({
 			method: 'get',
-			url: 'http://img.btu.pp.ua/random/api.php?type=json',
+			url: 'http://3650000.xyz/api/?type=img&mode=3&type=json',
 			encoding: null,
 		});
 		const u = /^http/.test(res.data.url) ? res.data.url : `http://img.btu.pp.ua/random/${res.data.url}`;
@@ -136,57 +182,11 @@ async function getSetu(user, msg, key) {
 		return "已读，不回!"
 	}
 }
-/**
- * 获取小姐姐视频链接
- * @param {gotLink} callback 获取到链接回调，回传参数：获取到的视频url
- */
-function getVideoLink(callback) {
-	let linkID = [1, 3, 4, 5, 6, 7, 8, 9, 10][Math.floor(Math.random() * 9)];
-	axios({
-		method: 'get',
-		url: `https://mm.diskgirl.com/get/get${linkID}.php`,
-	}).then(resp => {
-		const res = resp.data;
-		console.log('获取到链接: ' + res);
-		if (/^https?:\/\//.test(res)) {
-			axios({
-					method: 'get',
-					url: res,
-				})
-				.then(resp => {
-					resp.status === 200 ?
-						(console.log('└链接状态正常'),
-							typeof callback === 'function' && callback(res)) :
-						getVideoLink(callback);
-				})
-				.catch(() => {
-					getVideoLink(callback);
-				});
-		} else getVideoLink(callback);
-	}).catch(() => {
-		console.log('链接获取失败');
-		getVideoLink(callback);
-	});
-}
-/**
- * 发送小姐姐视频
- * @param {string} user 用户名
- */
-function sendXJJVideo(user, key) {
-	if (!checkSetuTime(user, key)) return;
-	// sendMsg(`@${user} :正在获取链接并检测链接活性，请稍等几秒`);
-	getVideoLink(async res => {
-		const sta = await getCDNLinks(res);
-		let cb = `<p> 小姐姐来喽，请在方便的时候查看</p><br>${res === sta
-            ? ''
-            : `<p>视频有效期【${formatTime(conf.api.max_age * 60)}】</p><br>`
-            }<br><video controls src='${sta}'/>`;
-		return cb;
-	});
-}
+
 module.exports = {
 	getXJJ,
 	GetLSPRanking,
 	getSetu,
-	sendXJJVideo
+	GetXiaoIceGameRank,
+	GetXiaoIceGameRanking
 };

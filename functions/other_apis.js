@@ -6,20 +6,7 @@ const {
 const {
     xiaoBingEncode
 } = require('./utils');
-let updateCookieInterval = 0;
-/**
- * 更新小冰的cookies
- */
-function updateCookie(iscancle = false) {
-    if (iscancle) {
-        clearInterval(updateCookieInterval);
-        return;
-    }
-    updateCookieInterval = setInterval(() => {
-        getCookie();
-        getChatData('小冰在吗？');
-    }, 60 * 60 * 1000); //每1个小时刷新一次
-}
+
 /**
  * 网易云点歌
  * @param {string} user 用户名
@@ -51,61 +38,13 @@ async function wyydiange(user, message) {
 }
 
 /**
- * 获取小冰无意义的对话
- * @param {string} data 请求对话内容
- * @returns 获取到的回复
- */
-async function getChatData(data) {
-    try {
-        const res = await axios({
-            method: 'post',
-            url: 'https://ux-plus.xiaoice.com/s_api/game/getresponse?workflow=AIBeingsGFChat',
-            headers: {
-                accept: '*/*',
-                'content-type': ' application/json;charset=UTF-8',
-                cookie: conf.xiaobing.cookie,
-                origin: 'https://ux-plus.xiaoice.com',
-                referer: 'https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
-            },
-            data: `{"TraceId":"","PartnerName":"","SubPartnerId":"VirtualGF","Content":{"Text":"${data}","Metadata":{}}}`,
-        });
-        let cb = '';
-        if (res.data[0].Content.AudioUrl) {
-            cb =
-                `<br><audio controls> <source src="${res.data[0].Content.AudioUrl}" type="audio/mpeg"></audio><hr><p>以下是语音转文字: <br>${res.data[0].Content.Text}</p>`;
-        } else {
-            cb = res.data[0].Content.Text;
-        }
-        return cb;
-    } catch (error) {
-        console.log('不知道什么问题', error);
-        return '小冰的cookie过期了呢~\n菜鸡两个开发还不知道怎么自动更新cookie';
-    }
-}
-
-function getCookie() {
-    axios({
-        method: 'get',
-        url: 'https://ux-plus.xiaoice.com/virtualgirlfriend',
-        headers: {
-            accept: ' */*',
-            'content-type': ' application/json;charset=UTF-8',
-            cookie: conf.xiaobing.cookie,
-            origin: ' https://ux-plus.xiaoice.com',
-            referer: ' https://ux-plus.xiaoice.com/virtualgirlfriend?authcode=',
-            'user-agent': ' Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
-        },
-    });
-}
-/**
  * 获取天气
  * @param {string} user 用户名
  * @param {string} msg 消息
  */
 function getXiaohuaAndTianqi(user, msg) {
     return new Promise((resolve, reject) => {
-        let dateReg = /(今天|明天|后天|大后天)*天气$/
+        let dateReg = /(今天|明天|后天|大后天)*天气/
         let date = msg.match(dateReg)[1];
         let adr = "";
         if (date) {
@@ -122,7 +61,7 @@ function getXiaohuaAndTianqi(user, msg) {
         }))
         query(
             `SELECT * FROM adcode WHERE addr LIKE '%${adr.split("").join("%")}%'`,
-            async function(err, vals) {
+            async function (err, vals) {
                 if (err) {
                     console.log('checkSetuTime出错:', err);
                 } else {
@@ -159,10 +98,22 @@ function getXiaohuaAndTianqi(user, msg) {
 
                                 }
                                 let warningCode = {
-                                    "01": { name: "蓝色", color: "blue" },
-                                    "02": { name: "黄色", color: "yellow" },
-                                    "03": { name: "橙色", color: "orange" },
-                                    "04": { name: "红色", color: "red" },
+                                    "01": {
+                                        name: "蓝色",
+                                        color: "blue"
+                                    },
+                                    "02": {
+                                        name: "黄色",
+                                        color: "yellow"
+                                    },
+                                    "03": {
+                                        name: "橙色",
+                                        color: "orange"
+                                    },
+                                    "04": {
+                                        name: "红色",
+                                        color: "red"
+                                    },
                                 }
                                 let cb = `\n ${adr}:${weatherData.forecast_keypoint}`;
                                 let msg = "";
@@ -255,9 +206,7 @@ async function chatWithXiaoBingByBing(msg) {
     }
 }
 module.exports = {
-    updateCookie,
     wyydiange,
-    getChatData,
     getXiaohuaAndTianqi,
     chatWithXiaoBingByBing,
 };
