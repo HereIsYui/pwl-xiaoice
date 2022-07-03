@@ -16,6 +16,7 @@ const {
 const {
 	getXJJ,
 	GetLSPRanking,
+	GetXiaoIceGameRank,
 	getSetu
 } = require('./lsp');
 const {
@@ -240,7 +241,7 @@ const XiaoIceRuleList = [{
 }, {
 	rule: /^等级排行(榜?)$/,
 	func: async (user, message) => {
-		let cb = "https://fishpi.cn/top/xiaoice";
+		let cb = await GetXiaoIceGameRank();
 		return cb;
 	}
 }, {

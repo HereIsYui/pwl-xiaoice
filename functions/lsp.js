@@ -18,39 +18,42 @@ let lastSetuTime = 0;
  */
 function GetXiaoIceGameRank(user) {
 	return new Promise((resolve, reject) => {
+		const levelFilter = ["黄阶低级", "黄阶中级", "黄阶高级", "玄阶低级", "玄阶中级", "玄阶高级", "地阶低级", "地阶中级", "地阶高级", "天阶低级", "天阶中级", "天阶高级"];
 		query(
-			`SELECT uname,lvfilter,exp FROM game_user_info WHERE uname != "Yui" AND uname != "xiaoIce" ORDER BY exp DESC LIMIT 0,10`,
-			function(err, vals) {
+			`SELECT uname,lvfilter,exp,family FROM game_user_info WHERE uname != "Yui" AND uname != "xiaoIce" ORDER BY exp DESC LIMIT 0,5`,
+			function (err, vals) {
 				if (err) {
 					resolve("等级排行榜查询失败！");
 				} else {
-					let msg = `<table><caption align="top">等级排行榜</caption><tr><th>排名</th><th>玩家</th><th>等级</th><th>经验</th></tr>`;
-                    vals.forEach((item,index) => {
-                        msg += `<tr><td>${index + 1}</td><td>${item.uname}</td><td>${item.lvfilter}</td><td>${item.exp}</td></tr>`
-                    })
-                    msg += "</table>"
+					let msg = `等级排行榜 \n`;
+					vals.forEach((item, index) => {
+						item.family = JSON.parse(item.family);
+						msg += `${index + 1}. ${item.uname}[${item.lvfilter}],当前经验：${item.exp}。血脉：${levelFilter[item.family.ancestry]}，功法：${levelFilter[item.family.gongfa]}。\n`
+					})
+					msg += "<a href='https://fishpi.cn/top/xiaoice' target='_blank'>完整榜单</a>"
 					resolve(msg);
 				}
 			}
 		);
 	})
 }
+
 function GetXiaoIceGameRanking(type) {
-    let byType = "gui.exp";
-    if(type == 0){
-        byType = "gui.exp"
-    }else if(type == 1){
-        byType = "gud.dieTimes"
-    }else if(type == 2){
-        byType = "gud.allExTimes"
-    }else if(type == 3){
-        byType = "gud.allBsTimes"
-    }
-    let sql = `SELECT gui.uname,gui.family,gui.exp,gui.lvfilter,gud.bsTimes,gud.exTimes,gud.allBsTimes,gud.allExTimes,gud.dieTimes FROM game_user_info AS gui,game_user_detail AS gud WHERE gui.uname = gud.uname AND gui.delete_flag = 0 ORDER BY ${byType} DESC LIMIT 0,64`
+	let byType = "gui.exp";
+	if (type == 0) {
+		byType = "gui.exp"
+	} else if (type == 1) {
+		byType = "gud.dieTimes"
+	} else if (type == 2) {
+		byType = "gud.allExTimes"
+	} else if (type == 3) {
+		byType = "gud.allBsTimes"
+	}
+	let sql = `SELECT gui.uname,gui.family,gui.exp,gui.lvfilter,gud.bsTimes,gud.exTimes,gud.allBsTimes,gud.allExTimes,gud.dieTimes FROM game_user_info AS gui,game_user_detail AS gud WHERE gui.uname = gud.uname AND gui.delete_flag = 0 ORDER BY ${byType} DESC LIMIT 0,64`
 	return new Promise((resolve, reject) => {
 		query(
 			sql,
-			function(err, vals) {
+			function (err, vals) {
 				if (err) {
 					resolve("查询失败！");
 				} else {
@@ -71,7 +74,7 @@ function checkSetuTime(user, key) {
 	}
 	query(
 		`SELECT * FROM setu_ranking WHERE userName = '${user}'`,
-		function(err, vals) {
+		function (err, vals) {
 			if (err) {
 				console.log('checkSetuTime出错:', err);
 			} else {
@@ -90,10 +93,10 @@ function checkSetuTime(user, key) {
 	// ) {
 	// 	sendMsg(
 	// 		`@${user} 你别这么猴急嘛！不是刚给你看过！\n再过【${formatTime(
- //                (conf.rob.lspWaitingTime * 60 * 1000 -
- //                    (nowTime - lastSetuTime)) /
- //                1000
- //            )}】，才能看下一张哦！ \n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`
+	//                (conf.rob.lspWaitingTime * 60 * 1000 -
+	//                    (nowTime - lastSetuTime)) /
+	//                1000
+	//            )}】，才能看下一张哦！ \n ![lsp](https://pwl.stackoverflow.wiki/2021/12/image-174932da.png)`
 	// 	);
 	// 	return false;
 	// }
@@ -129,7 +132,7 @@ function GetLSPRanking(user) {
 	return new Promise((resolve, reject) => {
 		query(
 			`SELECT userName,setu_times FROM setu_ranking ORDER BY setu_times DESC LIMIT 0,10`,
-			function(err, vals) {
+			function (err, vals) {
 				if (err) {
 					resolve("lsp排行榜查询失败！");
 				} else {
