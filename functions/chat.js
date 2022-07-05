@@ -1,5 +1,5 @@
 const axios = require('axios');
-const WSC = require('w-websocket-client');
+var WebSocketClient = require('websocket').client;
 const {
 	configInfo: conf,
 	writeConfig
@@ -27,42 +27,48 @@ const {
 const {
 	sendMsg
 } = require('./utils');
-let xioaIceMsg = null;
 
 var oIdList = [];
-const opt = {
-	url: `wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`,
-	open() {
-		console.log(`wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`)
-		console.log('嘀~你的小冰已上线!');
-		setInterval(() => {
-			socketClient.send("-hb-")
-		}, 3 * 60 * 1000)
-	},
-	close() {
-		console.log('嘀~你的小冰已掉线!');
-	},
-	async message(data) {
-		const dataInfo = JSON.parse(data.toString('utf8'));
-		if (dataInfo.type !== 'msg' || !dataInfo.md) return;
-		//非聊天消息
-		const msg = dataInfo.md.trim();
-		const oId = dataInfo.oId;
-		oIdList.unshift(oId);
-		if (oIdList.length > 500) {
-			oIdList.splice(250, oIdList.length - 1);
-		}
-		const user = dataInfo.userName;
-		if (!['xiaoIce'].includes(user)) {
-			console.log(`收到${user}的消息:${msg}`);
-			let cb = await CallBackMsg(user, msg);
-			sendMsg(cb)
-		}
-	},
-	error() {
+var client = new WebSocketClient();
+client.on('connectFailed', function (error) {
+	console.log('Connect Error: ' + error.toString());
+});
+client.on('connect', function (connection) {
+	console.log('嘀~你的小冰已上线!');
+	setInterval(() => {
+		socketClient.send("-hb-")
+	}, 3 * 60 * 1000)
+	connection.on('error', function (error) {
+		console.log("Connection Error: " + error.toString());
 		console.log('嘀~你的小冰尝试连接失败!');
-	},
-};
+	});
+	connection.on('close', function () {
+		console.log('嘀~你的小冰已掉线!');
+	});
+	connection.on('message', async function (message) {
+		if (message.type === 'utf8') {
+			const data = message.utf8Data;
+			const dataInfo = JSON.parse(data.toString('utf8'));
+			if (dataInfo.type !== 'msg' || !dataInfo.md) return;
+			//非聊天消息
+			const msg = dataInfo.md.trim();
+			const oId = dataInfo.oId;
+			oIdList.unshift(oId);
+			if (oIdList.length > 500) {
+				oIdList.splice(250, oIdList.length - 1);
+			}
+			const user = dataInfo.userName;
+			if (!['xiaoIce'].includes(user)) {
+				console.log(`收到${user}的消息:${msg}`);
+				let cb = await CallBackMsg(user, msg);
+				sendMsg(cb)
+			}
+		}
+
+	});
+});
+client.connect(`wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`);
+
 /**
  * 接收到的消息判断分发
  * @param {string} user 用户名
@@ -438,7 +444,6 @@ async function init() {
 		console.log('CK已过期');
 		await updateKey();
 	}
-	socketClient = new WSC(opt);
 	ChangeSaohuaState();
 }
 module.exports = {
