@@ -60,7 +60,7 @@ router.get('/API', async function(req, res) {
 		}
 	}
 })
-router.get('/XiaoIceSendMsg', async function(req, res) {
+router.get('/SendMsg', async function(req, res) {
 	var msg = decodeURI(req.query.msg);
 	var key = req.query.key;
 	if (!msg || key != "xiaoIceGame") {
