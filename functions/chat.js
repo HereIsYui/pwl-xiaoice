@@ -57,7 +57,7 @@ client.on('connect', function (connection) {
 
 	});
 });
-client.connect(`wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`);
+// client.connect(`wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`);
 
 /**
  * 接收到的消息判断分发
@@ -238,9 +238,9 @@ async function DeleteMsg(oId) {
 
 async function init() {
 	axios.default.timeout = 5 * 1000;
-	process.on('unhandledRejection', error => {
-		console.log('我帮你处理了', error.message);
-	});
+	// process.on('unhandledRejection', error => {
+	// 	console.log('我帮你处理了', error.message);
+	// });
 	//全局5秒超时
 	if (!(await checkKey())) {
 		console.log('CK已过期');

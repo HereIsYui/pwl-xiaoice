@@ -1,21 +1,22 @@
 const {
-	EmptyCall
+    EmptyCall
 } = require('./strings');
 const {
-	wyydiange,
-	getXiaohuaAndTianqi,
-	chatWithXiaoBingByBing,
+    wyydiange,
+    getXiaohuaAndTianqi,
+    chatWithXiaoBingByBing,
+    getActivutyRanking
 } = require('./other_apis');
 const {
-	getXJJ,
-	GetLSPRanking,
-	GetXiaoIceGameRank,
-	getSetu
+    getXJJ,
+    GetLSPRanking,
+    GetXiaoIceGameRank,
+    getSetu
 } = require('./lsp');
 const {
-	changeSaoHua,
-	changeR18,
-	setAdmin,
+    changeSaoHua,
+    changeR18,
+    setAdmin,
 } = require('./settings');
 
 const GlobalRuleList = [{
@@ -182,6 +183,12 @@ const XiaoIceRuleList = [{
         return cb;
     }
 }, {
+    rule: /^活动排行(榜?)$/,
+    func: async (user, message) => {
+        let cb = getActivutyRanking('鹊桥诗会')
+        return cb;
+    }
+}, {
     rule: /.*/,
     func: async (user, message) => {
         let cb = await chatWithXiaoBingByBing(message);
@@ -190,23 +197,23 @@ const XiaoIceRuleList = [{
 }]
 
 async function GetXiaoIceMsg(user, msg, key) {
-	console.log('叮~你的小冰被唤醒了');
-	// 更新上次讲话时间
-	let message = msg.replace(/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i, '');
-	if (/并说/.test(message)) {
-		message = message.split(':');
-		message = message[message.length - 1];
-	}
-	message = message.trim();
-	let cb = "";
-	for (let r of XiaoIceRuleList) {
-		if (r.rule.test(message)) {
-			console.log(`收到${user}的指令：${message}`)
-			cb = await r.func(user, message, key);
-			break;
-		}
-	}
-	return cb;
+    console.log('叮~你的小冰被唤醒了');
+    // 更新上次讲话时间
+    let message = msg.replace(/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i, '');
+    if (/并说/.test(message)) {
+        message = message.split(':');
+        message = message[message.length - 1];
+    }
+    message = message.trim();
+    let cb = "";
+    for (let r of XiaoIceRuleList) {
+        if (r.rule.test(message)) {
+            console.log(`收到${user}的指令：${message}`)
+            cb = await r.func(user, message, key);
+            break;
+        }
+    }
+    return cb;
 
 }
 
