@@ -209,7 +209,7 @@ async function chatWithXiaoBingByBing(msg) {
 
 
 /**
- * 获取活动排名
+ * 获取活动前十排名
  */
 let RankingResult = {};
 async function getActivutyRanking(tag) {
@@ -233,7 +233,7 @@ async function GetActivityInfo(tag) {
         for (let item of rList) {
             if (item.articleAuthorName == 'csfwff') break;
             item._activityScore = item.articleGoodCnt + item.articleCollectCnt + (item.articleThankCnt * 3);
-            item.commUidList = []
+            item.commUidList = [];
             if (item.articleCommentCount > 0) {
                 item.commUidList = [item.articleAuthorId];
                 const thisArticleDetail = await axios({
@@ -253,9 +253,9 @@ async function GetActivityInfo(tag) {
         rList.sort(function (a, b) {
             return b._activityScore - a._activityScore
         })
-        let result = `<details><summary>[${tag}]活动排行榜：</summary><table><tr><th>排名</th><th>作者</th><th>总分</th><th>点赞</th><th>收藏</th><th>评论</th><th>感谢</th></tr>`;
+        let result = `<details><summary>[${tag}]活动前十榜：</summary><table><tr><th>排名</th><th>作者</th><th>总分</th><th>点赞</th><th>收藏</th><th>评论</th><th>感谢</th></tr>`;
         for (let i = 0; i < 10; i++) {
-            result += `<tr><td>${i+1}</td><td><a href="https://fishpi.cn${rList[i].articlePermalink}">${rList[i].articleAuthorName}</a></td><td>${rList[i]._activityScore}</td><td>${rList[i].articleGoodCnt}</td><td>${rList[i].articleCollectCnt}</td><td>${rList[i].commUidList.length}</td><td>${rList[i].articleThankCnt}</td></tr>`
+            result += `<tr><td>${i+1}</td><td><a href="https://fishpi.cn${rList[i].articlePermalink}">${rList[i].articleAuthorName}</a></td><td>${rList[i]._activityScore}</td><td>${rList[i].articleGoodCnt}</td><td>${rList[i].articleCollectCnt}</td><td>${rList[i].commUidList ? rList[i].commUidList.length : 0}</td><td>${rList[i].articleThankCnt}</td></tr>`
         }
         result += `</table></details>`
         RankingResult.result = result;
@@ -265,17 +265,54 @@ async function GetActivityInfo(tag) {
         return `报错啦`
     }
 }
-GetActivityInfo()
-setInterval(() => {
-    if (new Date().getHours() > 9 && new Date().getHours() < 22) {
-        GetActivityInfo()
+
+async function GetActivityAllInfo(tag) {
+    const res = await axios({
+        method: 'get',
+        url: `https://fishpi.cn/api/articles/tag/${encodeURI(tag)}/hot/?apiKey=${conf.PWL.apiKey}`,
+    })
+    if (res.data.code == 0) {
+        let rList = res.data.data.articles;
+        for (let item of rList) {
+            if (item.articleAuthorName == 'csfwff') break;
+            item._activityScore = item.articleGoodCnt + item.articleCollectCnt + (item.articleThankCnt * 3);
+            item.commUidList = [];
+            if (item.articleCommentCount > 0) {
+                item.commUidList = [item.articleAuthorId];
+                const thisArticleDetail = await axios({
+                    url: `https://fishpi.cn/api/article/${item.oId}?apiKey=${conf.PWL.apiKey}`
+                })
+                if (thisArticleDetail.data.code == 0) {
+                    let commList = thisArticleDetail.data.data.article.articleComments;
+                    commList.forEach(comm => {
+                        if (!item.commUidList.includes(comm.commentAuthorId)) {
+                            item.commUidList.push(comm.commentAuthorId)
+                            item._activityScore += 2;
+                        }
+                    })
+                }
+            }
+        }
+        rList.sort(function (a, b) {
+            return b._activityScore - a._activityScore
+        })
+        let result = `<details><summary>[${tag}]活动前十榜：</summary><table><tr><th>排名</th><th>作者</th><th>总分</th><th>点赞</th><th>收藏</th><th>评论</th><th>感谢</th></tr>`;
+        for (let i = 0; i < rList.length; i++) {
+            result += `<tr><td>${i+1}</td><td><a href="https://fishpi.cn${rList[i].articlePermalink}">${rList[i].articleAuthorName}</a></td><td>${rList[i]._activityScore}</td><td>${rList[i].articleGoodCnt}</td><td>${rList[i].articleCollectCnt}</td><td>${rList[i].commUidList ? rList[i].commUidList.length : 0}</td><td>${rList[i].articleThankCnt}</td></tr>`
+        }
+        result += `</table></details>`
+        return result
+    } else {
+        return `报错啦`
     }
-}, 1000 * 60 * 90)
+}
 
 
 module.exports = {
     wyydiange,
     getXiaohuaAndTianqi,
     chatWithXiaoBingByBing,
-    getActivutyRanking
+    getActivutyRanking,
+    GetActivityInfo,
+    GetActivityAllInfo
 };

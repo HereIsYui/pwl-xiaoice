@@ -18,6 +18,10 @@ const {
 	XiaoIceRuleList
 } = require('./rules')
 
+const {
+	GetActivityInfo
+} = require('./other_apis')
+
 var oIdList = [];
 var client = new WebSocketClient();
 client.on('connectFailed', function (error) {
@@ -26,7 +30,7 @@ client.on('connectFailed', function (error) {
 client.on('connect', function (connection) {
 	console.log('嘀~你的小冰已上线!');
 	setInterval(() => {
-		socketClient.send("-hb-")
+		connection.sendUTF("-hb-")
 	}, 3 * 60 * 1000)
 	connection.on('error', function (error) {
 		console.log("Connection Error: " + error.toString());
@@ -238,15 +242,16 @@ async function DeleteMsg(oId) {
 
 async function init() {
 	axios.default.timeout = 5 * 1000;
-	// process.on('unhandledRejection', error => {
-	// 	console.log('我帮你处理了', error.message);
-	// });
+	process.on('unhandledRejection', error => {
+		console.log('我帮你处理了', error.message);
+	});
 	//全局5秒超时
 	if (!(await checkKey())) {
 		console.log('CK已过期');
 		await updateKey();
 	}
 	ChangeSaohuaState();
+	GetActivityInfo('鹊桥诗会');
 }
 module.exports = {
 	sendMsg,
