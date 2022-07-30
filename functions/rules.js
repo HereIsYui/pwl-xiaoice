@@ -1,4 +1,7 @@
 const {
+	configInfo: conf
+} = require('./config');
+const {
     EmptyCall
 } = require('./strings');
 const {
@@ -185,7 +188,7 @@ const XiaoIceRuleList = [{
 }, {
     rule: /^活动排行(榜?)$/,
     func: async (user, message) => {
-        let cb = getActivutyRanking('鹊桥诗会')
+        let cb = getActivutyRanking(conf.activity)
         return cb;
     }
 }, {

@@ -251,7 +251,7 @@ async function init() {
 		await updateKey();
 	}
 	ChangeSaohuaState();
-	GetActivityInfo('鹊桥诗会');
+	GetActivityInfo(conf.activity);
 }
 module.exports = {
 	sendMsg,
