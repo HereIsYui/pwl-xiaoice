@@ -57,6 +57,17 @@ function GetXiaoIceGameRanking(type) {
 				if (err) {
 					resolve("查询失败！");
 				} else {
+					vals.forEach((item, index) => {
+						if(item.family == null){
+							item.family = '{"name":"","level":0,"golds":0,"ancestry":0,"gongfa":0}'
+						}
+						if(item.exp == null){
+							item.exp = 0
+						}
+						if(item.lvfilter == null){
+							item.lvfilter = "麻瓜"
+						}
+					})
 					resolve(vals);
 				}
 			}

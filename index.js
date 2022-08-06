@@ -9,13 +9,18 @@ const {
 const {
 	sendMsg
 } = require('./functions/utils');
-const { GetXiaoIceGameRanking } = require('./functions/lsp');
+const {
+	GetXiaoIceGameRanking
+} = require('./functions/lsp');
+const {
+	GetActivityAllInfo
+} = require('./functions/other_apis')
 
 //初始化WS
 init();
 // 每5分钟检测一次 已有新欢，旧爱拜拜
 
-router.get('/GetImage', async function(req, res) {
+router.get('/GetImage', async function (req, res) {
 	var url = req.query.url;
 	url = decodeURI(url);
 	url = Buffer.from(url, 'base64').toString();
@@ -26,7 +31,7 @@ router.get('/GetImage', async function(req, res) {
 		headers: {
 			"Referer": "https://pwl.icu/"
 		}
-	}, function(error, response, body) {
+	}, function (error, response, body) {
 		if (!error && response.statusCode === 200) {
 			res.set('Content-Type', 'image/png;');
 			res.send(body);
@@ -36,7 +41,7 @@ router.get('/GetImage', async function(req, res) {
 		}
 	});
 });
-router.get('/API', async function(req, res) {
+router.get('/API', async function (req, res) {
 	var msg = req.query.msg;
 	var user = req.query.user;
 	var key = req.query.key;
@@ -60,7 +65,7 @@ router.get('/API', async function(req, res) {
 		}
 	}
 })
-router.get('/SendMsg', async function(req, res) {
+router.get('/SendMsg', async function (req, res) {
 	var msg = decodeURI(req.query.msg);
 	var key = req.query.key;
 	if (!msg || key != "xiaoIceGame") {
@@ -71,14 +76,14 @@ router.get('/SendMsg', async function(req, res) {
 	} else {
 		sendMsg(msg)
 		res.send({
-		    code:200,
-		    msg:"ok"
+			code: 200,
+			msg: "ok"
 		})
 	}
 })
 
-router.get('/GetXiaoIceGameRank', async function(req, res) {
-    var type = req.query.type;
+router.get('/GetXiaoIceGameRank', async function (req, res) {
+	var type = req.query.type;
 	var key = req.query.key;
 	if (key != "xiaoIceGame") {
 		res.send({
@@ -88,15 +93,33 @@ router.get('/GetXiaoIceGameRank', async function(req, res) {
 	} else {
 		let cb = await GetXiaoIceGameRanking(type)
 		res.send({
-		    code:200,
-		    msg:"ok",
-		    data:cb
+			code: 200,
+			msg: "ok",
+			data: cb
+		})
+	}
+})
+
+router.get('/GetActiveRanking', async function (req, res) {
+	var key = req.query.key;
+	var tag = req.query.tag;
+	if (key != "xiaoIceGame") {
+		res.send({
+			code: 201,
+			msg: "缺少参数"
+		});
+	} else {
+		let cb = await GetActivityAllInfo(tag)
+		res.send({
+			code: 200,
+			msg: "ok",
+			data: cb
 		})
 	}
 })
 
 
-app.all('*', function(req, res, next) {
+app.all('*', function (req, res, next) {
 	//设为指定的域
 	res.header('Access-Control-Allow-Origin', "*");
 	res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -108,6 +131,6 @@ app.all('*', function(req, res, next) {
 });
 
 app.use('/', router);
-app.listen(3002, function() {
+app.listen(3002, function () {
 	console.log('YTNF-Server Start at:' + 3002);
 });

@@ -18,6 +18,10 @@ const {
 	XiaoIceRuleList
 } = require('./rules')
 
+const {
+	GetActivityInfo
+} = require('./other_apis')
+
 var oIdList = [];
 var client = new WebSocketClient();
 client.on('connectFailed', function (error) {
@@ -26,7 +30,7 @@ client.on('connectFailed', function (error) {
 client.on('connect', function (connection) {
 	console.log('嘀~你的小冰已上线!');
 	setInterval(() => {
-		socketClient.send("-hb-")
+		connection.sendUTF("-hb-")
 	}, 3 * 60 * 1000)
 	connection.on('error', function (error) {
 		console.log("Connection Error: " + error.toString());
@@ -57,7 +61,7 @@ client.on('connect', function (connection) {
 
 	});
 });
-client.connect(`wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`);
+// client.connect(`wss://fishpi.cn/chat-room-channel?apiKey=${conf.PWL.apiKey}`);
 
 /**
  * 接收到的消息判断分发
@@ -247,6 +251,7 @@ async function init() {
 		await updateKey();
 	}
 	ChangeSaohuaState();
+	GetActivityInfo(conf.activity);
 }
 module.exports = {
 	sendMsg,

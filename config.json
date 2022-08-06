@@ -25,7 +25,8 @@
         "port": 0
     },
     "admin": [],
-	"weather":{
-		"key":""
-	}
+    "weather": {
+        "key": ""
+    },
+    "activity": ""
 }
