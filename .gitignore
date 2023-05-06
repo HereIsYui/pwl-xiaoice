@@ -104,3 +104,6 @@ dist
 .tern-port
 config_dev.json
 game/
+
+# 屏蔽开发配置
+IceConfig_dev.ts
