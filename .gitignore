@@ -106,4 +106,4 @@ config_dev.json
 game/
 
 # 屏蔽开发配置
-IceConfig_dev.ts
+IceConfig_dev.json
