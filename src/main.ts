@@ -9,8 +9,8 @@ let apiKey = conf.fishpi.apiKey;
 async function fishGetApiKey() {
   let fish = new FishPi();
   let rsp = await fish.login({
-    username: 'fishpi',
-    passwd: 'ling961208'
+    username: conf.fishpi.nameOrEmail,
+    passwd: conf.fishpi.userPassword
   });
   LOGGER.Log(JSON.stringify(rsp))
   if (rsp.code == 0) {
@@ -31,8 +31,19 @@ async function fishGetApiKey() {
 // 连接聊天室 & 监听私信消息
 async function fishInit() {
   let fish = new FishPi(apiKey);
-  fish.chatroom.addListener((ev: any) => {
+  fish.chatroom.addListener(async (ev: any) => {
     // 处理消息
+    if (ev.msg.type == 'redPacket') {
+      // 只处理机器人专属红包
+      if (ev.msg.data.content.recivers == '["fishpi"]') {
+        let packet = await fish.chatroom.redpacket.open(ev.msg.data.oId);
+        let pointNum = (packet as any).who[0].userMoney;
+        LOGGER.Log(pointNum);
+        let user = ev.msg.data.userName;
+        fish.chatroom.send(`感谢${user}老板的${pointNum}积分～`);
+      }
+    }
+    // 聊天消息处理
     if (ev.msg.type == 'msg') {
       let msg = ev.msg.data.md;
       msg = msg.replace(/<span[^>]*?>(<\/span>)*$/, "");
