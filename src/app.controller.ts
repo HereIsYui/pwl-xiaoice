@@ -9,4 +9,9 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('/chatInit')
+  getChat():string{
+    return this.appService.initChat();
+  }
 }
