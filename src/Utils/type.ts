@@ -7,4 +7,6 @@ export interface ChatMsg {
   msg?: string,
   // 红包的积分 type = 1时必填
   point?: number,
+  // 用户信息
+  detail?: any
 }

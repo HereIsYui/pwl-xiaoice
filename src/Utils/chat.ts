@@ -7,11 +7,12 @@ export const ChatCallBack = function (fish: FishPi, data: ChatMsg) {
       break;
     case 1:
       // 专属红包消息处理
-      fish.chatroom.send(`感谢${data.user}老板的${data.point}积分～`);
+      let uname = data.detail ? (data.detail.nick_name ? data.detail.nick_name : (data.detail.gender == 0 ? '哥哥' : '姐姐')) : '老板'
+      fish.chatroom.send(`@${data.user} 感谢${uname}的红包:heartbeat:`);
       break
     case 2:
       // 私信消息处理
-      fish.chat.send(data.user, '🥪Hi,这里是小冰机器人! \nbut,小冰暂时不能进行私信对话哦T-T \n如有问题请私信Yui~');
+      fish.chat.send(data.user, `🥪Hi\n这里是小冰机器人!\n私聊的消息小冰暂时不做处理哦~\n如有事请联系小冰管理员:<a href="https://fishpi.cn/chat?toUser=Yui" target="_blank">Yui</a>`);
       break;
     default:
       break;

@@ -3,12 +3,16 @@ import FishPi, { NoticeMsg } from 'fishpi';
 import { configInfo as conf, writeConfig } from './Utils/config'
 import { LOGGER } from './Utils/logger'
 import { ChatCallBack } from './Utils/chat'
+import { Like, Repository } from 'typeorm'
+import { InjectRepository } from '@nestjs/typeorm'
+import { User } from './entities/user.entities'
 
 @Injectable()
 export class AppService {
+  // 依赖注入
   isChatOpen: Boolean;
   apiKey: string;
-  constructor() {
+  constructor(@InjectRepository(User) private readonly user: Repository<User>) {
     this.apiKey = conf.fishpi.apiKey;
   }
   getHello(): string {
@@ -60,13 +64,28 @@ export class AppService {
         // 只处理机器人专属红包
         let packet = await fish.chatroom.redpacket.open(msgData.oId);
         let pointNum = (packet as any).who[0].userMoney;
+        let uInfo = await this.user.find({ where: { uId: msgData.userOId } });
+        let nUser = null;
+        if (uInfo.length == 0) {
+          nUser = new User();
+          nUser.user = user;
+          nUser.uId = msgData.userOId;
+          nUser.intimacy = pointNum;
+          this.user.save(nUser)
+        } else {
+          nUser = uInfo[0];
+          nUser.intimacy += pointNum;
+          this.user.update(nUser.id, nUser)
+        }
         ChatCallBack(fish, {
           oId: msgData.oId,
           uId: msgData.userOId,
           user: user,
           type: 1,
-          point: pointNum
+          point: pointNum,
+          detail: nUser
         });
+        LOGGER.Log(JSON.stringify(uInfo), 0)
         LOGGER.Log(`${user}给你发了一个红包,获得${pointNum}积分`, 1);
       }
       // 聊天消息处理 (不处理机器人消息)
@@ -97,13 +116,29 @@ export class AppService {
         // 新私聊消息
         case 'newIdleChatMessage':
           // msg 就是新的私聊消息
+          // 这里uId不对，先不处理
+          // let uInfo = await this.user.find({ where: { uId: msg.userId } });
+          // let nUser = null;
+          // if (uInfo.length == 0) {
+          //   nUser = new User();
+          //   nUser.user = msg.senderUserName;
+          //   nUser.uId = msg.userId;
+          //   nUser.intimacy = 1;
+          //   this.user.save(nUser)
+          // } else {
+          //   nUser = uInfo[0];
+          //   nUser.intimacy += 1;
+          //   this.user.update(nUser.id, nUser)
+          // }
           ChatCallBack(fish, {
             oId: msg.userId,
             uId: msg.userId,
             user: msg.senderUserName,
             type: 2,
-            msg: msg.preview
+            msg: msg.preview,
+            detail: null
           });
+          //LOGGER.Log(JSON.stringify(uInfo), 0)
           LOGGER.Log(msg.senderUserName + '私信你说：' + msg.preview, 1);
           break;
       }

@@ -107,3 +107,8 @@ game/
 
 # 屏蔽开发配置
 IceConfig_dev.json
+
+# Mac
+.DS_Store
+**/.DS_Store
+.DS_Store?
