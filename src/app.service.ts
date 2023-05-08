@@ -6,12 +6,6 @@ import { ChatCallBack } from './Utils/chat'
 
 @Injectable()
 export class AppService {
-  apiKey: string;
-  isChatOpen: Boolean;
-  constructor(apiKey: string, isChatOpen: Boolean) {
-    this.apiKey = apiKey;
-    this.isChatOpen = isChatOpen;
-  }
   getHello(): string {
     return '🥪Hi,这里是fishpi.cn的小冰机器人!';
   }
@@ -24,15 +18,13 @@ export class AppService {
         fishInit();
       } else {
         LOGGER.Log('没有apiKey,去登录', 0)
-        this.fishGetApiKey();
+        fishGetApiKey();
       }
       return 'Chat Start Success!'
     }
   }
-  fishGetApiKey() {
-
-  }
 }
+
 let apiKey = conf.fishpi.apiKey;
 let isChatOpen = false;
 // 获取apiKey
@@ -65,7 +57,7 @@ async function fishInit() {
   fish.chatroom.addListener(async (ev: any) => {
     // 处理消息
     let msgData = ev.msg.data;
-    let user = msgData.userName;
+    let user = msgData?.userName;
     if (ev.msg.type == 'redPacket' && msgData.content.recivers == '["fishpi"]') {
       // 只处理机器人专属红包
       let packet = await fish.chatroom.redpacket.open(msgData.oId);
