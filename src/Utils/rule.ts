@@ -245,7 +245,7 @@ const XiaoIceRuleList = [{
     let now = new Date().getDate();
     if (conf.admin.includes(user)) {
       // 概率暂时设置成5%吧，以后在改成次数限制
-      if (Math.random() < (Math.abs(1 - new Date().getHours() / 2) / 10)) {
+      if (Math.random() > 0.95) {
         if (now != GlobalData.RedPacketDate) {
           GlobalData.isSendRedPacket = false;
         }
@@ -269,7 +269,7 @@ const XiaoIceRuleList = [{
       if (now != GlobalData.TodayRedPacketDate) {
         GlobalData.isSendTodayRedPacket = false;
       }
-      if (Math.random() < (Math.abs(1 - new Date().getHours() / 2) / 10)) {
+      if (Math.random() > 0.95) {
         if (!GlobalData.isSendTodayRedPacket) {
           GlobalData.isSendTodayRedPacket = true;
           GlobalData.TodayRedPacketDate = now;

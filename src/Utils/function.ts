@@ -82,7 +82,7 @@ export const getTianqi = function (user: string, msg: string, IceNet: any): Prom
     if (!adr) {
       resolve("你查询了一个寂寞~ \n 天气指令：小冰 地点[时间]天气");
     }
-    let vals = IceNet.city.find({ where: { addr: Like(`%${adr.split("").join("%")}%`) } })
+    let vals = await IceNet.city.find({ where: { addr: Like(`%${adr.split("").join("%")}%`) } })
     if (vals.length == 0) {
       resolve(`未查询到地点：${adr}`)
     } else {
@@ -195,6 +195,7 @@ export const getTianqi = function (user: string, msg: string, IceNet: any): Prom
           resolve("小冰的天气接口出错了哦~")
         }
       } catch (error) {
+        LOGGER.Log("查询天气异常：" + JSON.stringify(error), 0)
         resolve("小冰的天气接口出错了哦~")
       }
     }
