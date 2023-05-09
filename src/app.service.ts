@@ -1,18 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import FishPi, { NoticeMsg } from 'fishpi';
+import FishPi, { ChatData, NoticeMsg } from 'fishpi';
 import { configInfo as conf, writeConfig } from './Utils/config'
 import { LOGGER } from './Utils/logger'
 import { ChatCallBack } from './Utils/chat'
 import { Like, Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from './entities/user.entities'
+import { City } from './entities/city.entities';
 
 @Injectable()
 export class AppService {
   // 依赖注入
   isChatOpen: Boolean;
   apiKey: string;
-  constructor(@InjectRepository(User) private readonly user: Repository<User>) {
+  constructor(@InjectRepository(User) private readonly user: Repository<User>, @InjectRepository(City) private readonly city: Repository<City>) {
     this.apiKey = conf.fishpi.apiKey;
   }
   getHello(): string {
@@ -60,7 +61,7 @@ export class AppService {
       // 处理消息
       let msgData = ev.msg.data;
       let user = msgData?.userName;
-      if (ev.msg.type == 'redPacket' && msgData.content.recivers == '["fishpi"]') {
+      if (ev.msg.type == 'redPacket' && msgData.content.recivers == '["' + conf.fishpi.nameOrEmail + '"]') {
         // 只处理机器人专属红包
         let packet = await fish.chatroom.redpacket.open(msgData.oId);
         let pointNum = (packet as any).who[0].userMoney;
@@ -95,13 +96,29 @@ export class AppService {
         msg = msg.replace(/<span[^>]*?>(<\/span>)*$/, "");
         msg = msg.replace(/\n>.*/g, "");
         msg = msg.trim();
+        let nUser = null;
+        if (/^小冰/.test(msg)) {
+          let uInfo = await this.user.find({ where: { uId: msgData.userOId } });
+          if (uInfo.length == 0) {
+            nUser = new User();
+            nUser.user = user;
+            nUser.uId = msgData.userOId;
+            nUser.intimacy = 1;
+            this.user.save(nUser)
+          } else {
+            nUser = uInfo[0];
+            nUser.intimacy += 1;
+            this.user.update(nUser.id, nUser)
+          }
+        }
         ChatCallBack(fish, {
           oId: msgData.oId,
           uId: msgData.userOId,
           user: user,
           type: 0,
-          msg: msg
-        });
+          msg: msg,
+          detail: nUser
+        }, this);
         LOGGER.Log(`${user}说：${msg}`, 1)
       }
     });
@@ -112,6 +129,10 @@ export class AppService {
         // 私聊未读数更新
         case 'chatUnreadCountRefresh':
 
+          if (msg.count > 0) {
+            let unreadMsgs = await fish.chat.unread();
+            console.log(unreadMsgs)
+          }
           break;
         // 新私聊消息
         case 'newIdleChatMessage':
@@ -130,18 +151,54 @@ export class AppService {
           //   nUser.intimacy += 1;
           //   this.user.update(nUser.id, nUser)
           // }
-          ChatCallBack(fish, {
-            oId: msg.userId,
-            uId: msg.userId,
-            user: msg.senderUserName,
-            type: 2,
-            msg: msg.preview,
-            detail: null
-          });
+          // ChatCallBack(fish, {
+          //   oId: msg.userId,
+          //   uId: msg.userId,
+          //   user: msg.senderUserName,
+          //   type: 2,
+          //   msg: msg.preview,
+          //   detail: null
+          // });
           //LOGGER.Log(JSON.stringify(uInfo), 0)
-          LOGGER.Log(msg.senderUserName + '私信你说：' + msg.preview, 1);
+          //LOGGER.Log(msg.senderUserName + '私信你说：' + msg.preview, 1);
           break;
       }
     });
+
+    fish.chat.addListener(async ({ msg }: { msg: ChatData }) => {
+      let reg = /(\.\.\.\d+)|(:\s.+\s赠)|(\.\.\.\s.{2})/g;
+      if (msg.content.indexOf("获得") >= 0 && reg.test(msg.content)) {
+        let giftNum = msg.content.match(reg)[0].replace("...", "");
+        let giftName = msg.content.match(reg)[1].replace("... ", "").trim();
+        let giftUser = msg.content.match(reg)[2].split(" ")[1];
+        let uInfo = await this.user.find({ where: { user: giftUser } });
+        let nUser = null;
+        let intimacy = (giftName == "鱼丸" ? 1 : 10) * parseInt(giftNum);
+        if (parseInt(giftNum) <= 0) {
+          intimacy = -10
+        }
+        if (uInfo.length == 0) {
+          nUser = new User();
+          nUser.user = giftUser;
+          nUser.uId = "";
+          nUser.intimacy = intimacy;
+          this.user.save(nUser)
+        } else {
+          nUser = uInfo[0];
+          nUser.intimacy += intimacy;
+          this.user.update(nUser.id, nUser)
+        }
+        ChatCallBack(fish, {
+          oId: msg.oId,
+          uId: msg.fromId,
+          user: giftUser,
+          type: 3,
+          msg: JSON.stringify({ giftNum, giftName, giftUser, intimacy }),
+          detail: nUser
+        });
+        LOGGER.Log(giftUser + '赠送了你' + giftName + "*" + giftNum, 1);
+      }
+      //LOGGER.Log(msg.senderUserName + '私信你说：' + msg.content, 1);
+    }, 'sevenSummer');
   }
 }

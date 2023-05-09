@@ -11,7 +11,7 @@ export class User {
     @Column({ type: "varchar", length: 255 })
     uId: string
     // 机器人认为的用户性别
-    @Column({ type: "varchar", length: 255, default: '' })
+    @Column({ type: "varchar", length: 255, default: '1' })
     gender: string
     // 机器人对用户的昵称
     @Column({ type: "varchar", length: 255, default: '' })
