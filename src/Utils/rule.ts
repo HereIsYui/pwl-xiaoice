@@ -194,6 +194,7 @@ const XiaoIceRuleList = [{
     if (IceNet.UDetail.intimacy < 500) {
       cb = `${IceNet.UName},咱俩的关系还没到称呼${uwantName}的时候哦~`
     } else {
+      uwantName.replace(/(Yui|yui)/g, user);
       cb = `好的~以后我就叫你${uwantName}啦`;
       let nUser = IceNet.UDetail;
       nUser.nick_name = uwantName;
@@ -306,7 +307,7 @@ const XiaoIceRuleList = [{
         let num = parseInt(msg);
         let deleteList = GlobalData.oIdList.splice(0, num);
         deleteList.forEach(async function (oId) {
-          fish.chatroom.revoke(oId);
+          await fish.chatroom.revoke(oId);
         })
         cb = `撤回完成，共计撤回${num}条消息。`;
       } catch (e) {
