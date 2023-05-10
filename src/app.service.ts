@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import FishPi, { FingerTo, ChatData, NoticeMsg, Message } from 'fishpi';
+import FishPi, { FingerTo, ChatData, NoticeMsg, ChatMsg, BarragerMsg, RedPacketMessage } from 'fishpi';
 import { configInfo as conf, writeConfig } from './Utils/config'
 import { LOGGER } from './Utils/logger'
 import { ChatCallBack } from './Utils/chat'
@@ -58,40 +58,41 @@ export class AppService {
   async fishInit() {
     this.isChatOpen = true;
     this.fish = new FishPi(this.apiKey);
-    this.fish.chatroom.addListener(async (ev: any) => {
+    this.fish.chatroom.addListener(async ({ msg }) => {
       // 处理消息
-      let msgData = ev.msg.data;
-      let user = msgData?.userName;
-      if ((ev.msg.type == 'barrager' || ev.msg.type == 'msg') && user == 'xiong') {
-        let msginfo = ev.msg.type == 'barrager' ? msgData.barragerContent : msgData.md;
+      let ChatMsgData = msg.data as ChatMsg;
+      let BarragerMsgData = msg.data as BarragerMsg;
+      let user = ChatMsgData.userName;
+      if ((msg.type == 'barrager' || msg.type == 'msg') && user == 'xiong') {
+        let msginfo = msg.type == 'barrager' ? BarragerMsgData.barragerContent : ChatMsgData.md;
         if (/(xiàmù|我).{0,10}(是帅哥|帅哥|帅)/.test(msginfo)) {
           let xiongInfo = await this.fish.user('xiong');
           let xiongPoint = xiongInfo.userPoint;
           if (xiongPoint >= 250) {
             await FingerTo(conf.keys.point).editUserPoints(user, -250, "聊天室造谣,250积分已扣除")
-            if (ev.msg.type == 'msg') {
-              await this.fish.chatroom.revoke(msgData.oId);
+            if (msg.type == 'msg') {
+              await this.fish.chatroom.revoke(ChatMsgData.oId);
             }
             this.fish.chatroom.send(`@${user} 聊天室造谣,250积分已扣除`)
           } else {
-            if (ev.msg.type == 'msg') {
-              await this.fish.chatroom.revoke(msgData.uId);
+            if (msg.type == 'msg') {
+              await this.fish.chatroom.revoke(ChatMsgData.oId);
             }
             this.fish.chatroom.send(`@${user} 啧啧啧,你看看你 250积分都没有 还造谣`);
           }
           return;
         }
       }
-      if (ev.msg.type == 'redPacket' && msgData.content.recivers == '["' + conf.fishpi.nameOrEmail + '"]') {
+      if (msg.type == 'redPacket' && (ChatMsgData.content as RedPacketMessage).recivers.includes(conf.fishpi.nameOrEmail)) {
         // 只处理机器人专属红包
-        let packet = await this.fish.chatroom.redpacket.open(msgData.oId);
+        let packet = await this.fish.chatroom.redpacket.open(ChatMsgData.oId);
         let pointNum = (packet as any).who[0].userMoney;
-        let uInfo = await this.user.find({ where: { uId: msgData.userOId } });
+        let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
         let nUser = null;
         if (uInfo.length == 0) {
           nUser = new User();
           nUser.user = user;
-          nUser.uId = msgData.userOId;
+          nUser.uId = ChatMsgData.userOId;
           nUser.intimacy = pointNum;
           this.user.save(nUser)
         } else {
@@ -100,30 +101,29 @@ export class AppService {
           this.user.update(nUser.id, nUser)
         }
         ChatCallBack(this.fish, {
-          oId: msgData.oId,
-          uId: msgData.userOId,
+          oId: ChatMsgData.oId,
+          uId: ChatMsgData.userOId,
           user: user,
           type: 1,
           point: pointNum,
           detail: nUser
         });
-        LOGGER.Log(JSON.stringify(uInfo), 0)
+        //LOGGER.Log(JSON.stringify(uInfo), 0)
         LOGGER.Log(`${user}给你发了一个红包,获得${pointNum}积分`, 1);
       }
       // 聊天消息处理 (不处理机器人消息)
-      if (ev.msg.type == 'msg' && !['admin', 'xiaoIce', 'fishpi'].includes(user)) {
-        // LOGGER.Log(JSON.stringify(msgData), 1)
-        let msg = msgData.md;
+      if (msg.type == 'msg' && !['admin', 'xiaoIce', 'fishpi'].includes(user)) {
+        let msg = ChatMsgData.md;
         msg = msg.replace(/<span[^>]*?>(<\/span>)*$/, "");
         msg = msg.replace(/\n>.*/g, "");
         msg = msg.trim();
         let nUser = null;
         if (/^小冰/.test(msg)) {
-          let uInfo = await this.user.find({ where: { uId: msgData.userOId } });
+          let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
           if (uInfo.length == 0) {
             nUser = new User();
             nUser.user = user;
-            nUser.uId = msgData.userOId;
+            nUser.uId = ChatMsgData.userOId;
             nUser.intimacy = 1;
             this.user.save(nUser)
           } else {
@@ -133,8 +133,8 @@ export class AppService {
           }
         }
         ChatCallBack(this.fish, {
-          oId: msgData.oId,
-          uId: msgData.userOId,
+          oId: ChatMsgData.oId,
+          uId: ChatMsgData.userOId,
           user: user,
           type: 0,
           msg: msg,

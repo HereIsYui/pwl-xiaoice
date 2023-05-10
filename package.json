@@ -28,7 +28,7 @@
     "axios": "^1.4.0",
     "colors.ts": "^1.0.20",
     "dayjs": "^1.11.7",
-    "fishpi": "^0.0.31",
+    "fishpi": "^0.0.33",
     "mysql2": "^3.3.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
