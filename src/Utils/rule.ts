@@ -200,7 +200,7 @@ const XiaoIceRuleList = [{
     if (IceNet.UDetail.intimacy < 500) {
       cb = `${IceNet.UName},咱俩的关系还没到称呼\`${uwantName}\`的时候哦:angry:`
     } else {
-      uwantName.replace(/(Yui|爸爸|爷爷)/ig, user);
+      uwantName = uwantName.replace(/(Yui|爸爸|爷爷|爹爹)/ig, user);
       if (IceNet.UDetail.user == 'xiong' && uwantName.indexOf('帅哥') >= 0) {
         uwantName = "衰哥"
       }

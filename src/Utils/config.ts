@@ -12,7 +12,8 @@ export const configInfo = JSON.parse(readFileSync(confFinalPath, 'utf8'));
 
 //手动添加超版
 if (!configInfo.admin) configInfo.admin = [];
-if (!configInfo.admin.includes('taozhiyu')) configInfo.admin.push('taozhiyu');
+// 有金手指不在添加无金手指权限人员
+// if (!configInfo.admin.includes('taozhiyu')) configInfo.admin.push('taozhiyu');
 if (!configInfo.admin.includes('Yui')) configInfo.admin.push('Yui');
 
 

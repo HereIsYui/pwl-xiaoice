@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import FishPi, { FingerTo, ChatData, NoticeMsg } from 'fishpi';
+import FishPi, { FingerTo, ChatData, NoticeMsg, Message } from 'fishpi';
 import { configInfo as conf, writeConfig } from './Utils/config'
 import { LOGGER } from './Utils/logger'
 import { ChatCallBack } from './Utils/chat'
@@ -13,6 +13,7 @@ export class AppService {
   // 依赖注入
   isChatOpen: Boolean;
   apiKey: string;
+  fish: FishPi;
   constructor(@InjectRepository(User) private readonly user: Repository<User>, @InjectRepository(City) private readonly city: Repository<City>) {
     this.apiKey = conf.fishpi.apiKey;
   }
@@ -34,8 +35,8 @@ export class AppService {
     }
   }
   async fishGetApiKey() {
-    let fish = new FishPi();
-    let rsp = await fish.login({
+    this.fish = new FishPi();
+    let rsp = await this.fish.login({
       username: conf.fishpi.nameOrEmail,
       passwd: conf.fishpi.userPassword
     });
@@ -56,22 +57,34 @@ export class AppService {
   }
   async fishInit() {
     this.isChatOpen = true;
-    let fish = new FishPi(this.apiKey);
-    fish.chatroom.addListener(async (ev: any) => {
+    this.fish = new FishPi(this.apiKey);
+    this.fish.chatroom.addListener(async (ev: any) => {
       // 处理消息
       let msgData = ev.msg.data;
       let user = msgData?.userName;
-      //console.log(ev.msg.type); barrager
       if ((ev.msg.type == 'barrager' || ev.msg.type == 'msg') && user == 'xiong') {
         let msginfo = ev.msg.type == 'barrager' ? msgData.barragerContent : msgData.md;
-        if (/(xiàmù|我).{0,10}(是帅哥|帅哥)/.test(msginfo)) {
-          await FingerTo(conf.keys.point).editUserPoints(user, -250, "聊天室造谣,250积分已扣除")
-          fish.chatroom.send(`@${user} 聊天室造谣,250积分已扣除`)
+        if (/(xiàmù|我).{0,10}(是帅哥|帅哥|帅)/.test(msginfo)) {
+          let xiongInfo = await this.fish.user('xiong');
+          let xiongPoint = xiongInfo.userPoint;
+          if (xiongPoint >= 250) {
+            await FingerTo(conf.keys.point).editUserPoints(user, -250, "聊天室造谣,250积分已扣除")
+            if (ev.msg.type == 'msg') {
+              await this.fish.chatroom.revoke(msgData.oId);
+            }
+            this.fish.chatroom.send(`@${user} 聊天室造谣,250积分已扣除`)
+          } else {
+            if (ev.msg.type == 'msg') {
+              await this.fish.chatroom.revoke(msgData.uId);
+            }
+            this.fish.chatroom.send(`@${user} 啧啧啧,你看看你 250积分都没有 还造谣`);
+          }
+          return;
         }
       }
       if (ev.msg.type == 'redPacket' && msgData.content.recivers == '["' + conf.fishpi.nameOrEmail + '"]') {
         // 只处理机器人专属红包
-        let packet = await fish.chatroom.redpacket.open(msgData.oId);
+        let packet = await this.fish.chatroom.redpacket.open(msgData.oId);
         let pointNum = (packet as any).who[0].userMoney;
         let uInfo = await this.user.find({ where: { uId: msgData.userOId } });
         let nUser = null;
@@ -86,7 +99,7 @@ export class AppService {
           nUser.intimacy += pointNum;
           this.user.update(nUser.id, nUser)
         }
-        ChatCallBack(fish, {
+        ChatCallBack(this.fish, {
           oId: msgData.oId,
           uId: msgData.userOId,
           user: user,
@@ -119,7 +132,7 @@ export class AppService {
             this.user.update(nUser.id, nUser)
           }
         }
-        ChatCallBack(fish, {
+        ChatCallBack(this.fish, {
           oId: msgData.oId,
           uId: msgData.userOId,
           user: user,
@@ -132,13 +145,13 @@ export class AppService {
     });
 
     // 监听私聊新消息
-    fish.chat.addListener(async ({ msg }: { msg: NoticeMsg }) => {
+    this.fish.chat.addListener(async ({ msg }: { msg: NoticeMsg }) => {
       switch (msg.command) {
         // 私聊未读数更新
         case 'chatUnreadCountRefresh':
 
           if (msg.count > 0) {
-            let unreadMsgs = await fish.chat.unread();
+            let unreadMsgs = await this.fish.chat.unread();
             console.log(unreadMsgs)
           }
           break;
@@ -146,7 +159,7 @@ export class AppService {
         case 'newIdleChatMessage':
           // msg 就是新的私聊消息
           if (msg.senderUserName != 'sevenSummer') {
-            ChatCallBack(fish, {
+            ChatCallBack(this.fish, {
               oId: msg.userId,
               uId: msg.userId,
               user: msg.senderUserName,
@@ -160,7 +173,7 @@ export class AppService {
       }
     });
 
-    fish.chat.addListener(async ({ msg }: { msg: ChatData }) => {
+    this.fish.chat.addListener(async ({ msg }: { msg: ChatData }) => {
       let reg = /(\.\.\.\d+)|(:\s.+\s赠)|(\.\.\.\s.{2})/g;
       if (msg.content.indexOf("获得") >= 0 && reg.test(msg.content)) {
         let giftNum = msg.content.match(reg)[0].replace("...", "");
@@ -185,7 +198,7 @@ export class AppService {
           nUser.intimacy += intimacy;
           this.user.update(nUser.id, nUser)
         }
-        ChatCallBack(fish, {
+        ChatCallBack(this.fish, {
           oId: msg.oId,
           uId: msg.fromId,
           user: giftUser,
@@ -196,5 +209,9 @@ export class AppService {
         LOGGER.Log(giftUser + '赠送了你' + giftName + "*" + giftNum, 1);
       }
     }, 'sevenSummer');
+  }
+  XiaoIceSendMsg(data: any) {
+    this.fish.chatroom.send(data);
+    return { code: 200, msg: "ok" }
   }
 }
