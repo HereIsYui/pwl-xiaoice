@@ -187,25 +187,44 @@ const XiaoIceRuleList = [{
     return cb;
   }
 }, {
+  rule: /我是谁|叫我什么/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let cb = `当然是: ${IceNet.UName}啦:blush:`;
+    return cb;
+  }
+}, {
   rule: /叫我\w*/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let uwantName = message.substring(2).trim();
     let cb = "";
     if (IceNet.UDetail.intimacy < 500) {
-      cb = `${IceNet.UName},咱俩的关系还没到称呼${uwantName}的时候哦~`
+      cb = `${IceNet.UName},咱俩的关系还没到称呼\`${uwantName}\`的时候哦:angry:`
     } else {
-      uwantName.replace(/(Yui|yui)/g, user);
-      cb = `好的~以后我就叫你${uwantName}啦`;
+      uwantName.replace(/(Yui|爸爸|爷爷)/ig, user);
+      if (IceNet.UDetail.user == 'xiong' && uwantName.indexOf('帅哥') >= 0) {
+        uwantName = "衰哥"
+      }
+      cb = `好的~以后我就叫你${uwantName}啦:stuck_out_tongue_winking_eye:`;
       let nUser = IceNet.UDetail;
       nUser.nick_name = uwantName;
-      IceNet.user.update(IceNet.UDetail.id, nUser)
+      IceNet.user.update(nUser.id, nUser)
     }
     return cb;
   }
 }, {
   rule: /亲密度/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
-    let cb = `当前亲密度为: ${IceNet.UDetail.intimacy}`;
+    let cb = `当前亲密度为: ${IceNet.UDetail.intimacy}:two_hearts: \n > 召唤小冰,送鱼丸鱼翅,红包都可以增加亲密度哦`;
+    return cb;
+  }
+}, {
+  rule: /^我是(姐姐|哥哥)/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let gender = message.indexOf('哥哥') >= 0 ? 1 : 0;
+    let nUser = IceNet.UDetail;
+    nUser.gender = gender;
+    IceNet.user.update(nUser.id, nUser)
+    let cb = `好的,已修正性别:smiling_imp:`;
     return cb;
   }
 }, {
@@ -227,13 +246,33 @@ const XiaoIceRuleList = [{
     return cb;
   }
 }, {
+  rule: /补偿.{3,15}/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let cb = "";
+    if (conf.admin.includes(user)) {
+      let dataInfo = message.split(" ");
+      let BCUser = dataInfo[1];
+      let BCNum = dataInfo[2];
+      let BCWhy = dataInfo[3];
+      if (!BCUser || !BCNum || !BCWhy) {
+        cb = "补偿参数错误,正确格式示例[小冰 补偿 Yui 100 理由]"
+      } else {
+        FingerTo(conf.keys.point).editUserPoints(BCUser, parseInt(BCNum), BCWhy)
+        cb = `已补偿${BCUser}\`${BCNum}\`积分`
+      }
+    } else {
+      cb = `亲,这是管理的专属权限哦`;
+    }
+    return cb;
+  }
+}, {
   rule: /(去打劫|发工资)了?吗?$/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let cb = "";
     if (conf.admin.includes(user)) {
       let msg = await fish.account.rewardLiveness();
       let isDajie = !message.match('工资');
-      cb = `小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${msg >= 0 ? msg + '点积分~' : '0点积分，不要太贪心哦~'}`;
+      cb = `:credit_card:小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${msg >= 0 ? msg + '点积分~' : '0点积分，不要太贪心哦~'}`;
     } else {
       cb = `本是要去的，但是转念一想，尚有这么多事情要做，便也就放弃了罢`;
     }
@@ -264,7 +303,7 @@ const XiaoIceRuleList = [{
           cb = `今天已经发过了！你发我一个啊！`
         }
       } else {
-        cb = `不给了！不给了！光找我要红包，你倒是给我一个啊！本来工资就不高，还天天剥削我！！！`
+        cb = `不给了！不给了！天天找我要红包，你倒是给我一个啊！`
       }
     } else {
       if (now != GlobalData.TodayRedPacketDate) {
@@ -283,7 +322,7 @@ const XiaoIceRuleList = [{
           })
           cb = "";
         } else {
-          cb = `这件事已不必再提，皆因钱财不够`
+          cb = `:neutral_face:今天发过啦~`
         }
       } else {
         cb = `这件事已不必再提，皆因钱财不够`

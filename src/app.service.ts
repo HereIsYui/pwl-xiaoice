@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import FishPi, { ChatData, NoticeMsg } from 'fishpi';
+import FishPi, { FingerTo, ChatData, NoticeMsg } from 'fishpi';
 import { configInfo as conf, writeConfig } from './Utils/config'
 import { LOGGER } from './Utils/logger'
 import { ChatCallBack } from './Utils/chat'
@@ -61,6 +61,14 @@ export class AppService {
       // 处理消息
       let msgData = ev.msg.data;
       let user = msgData?.userName;
+      //console.log(ev.msg.type); barrager
+      if ((ev.msg.type == 'barrager' || ev.msg.type == 'msg') && user == 'xiong') {
+        let msginfo = ev.msg.type == 'barrager' ? msgData.barragerContent : msgData.md;
+        if (/(xiàmù|我).{0,10}(是帅哥|帅哥)/.test(msginfo)) {
+          await FingerTo(conf.keys.point).editUserPoints(user, -250, "聊天室造谣,250积分已扣除")
+          fish.chatroom.send(`@${user} 聊天室造谣,250积分已扣除`)
+        }
+      }
       if (ev.msg.type == 'redPacket' && msgData.content.recivers == '["' + conf.fishpi.nameOrEmail + '"]') {
         // 只处理机器人专属红包
         let packet = await fish.chatroom.redpacket.open(msgData.oId);
@@ -137,30 +145,17 @@ export class AppService {
         // 新私聊消息
         case 'newIdleChatMessage':
           // msg 就是新的私聊消息
-          // 这里uId不对，先不处理
-          // let uInfo = await this.user.find({ where: { uId: msg.userId } });
-          // let nUser = null;
-          // if (uInfo.length == 0) {
-          //   nUser = new User();
-          //   nUser.user = msg.senderUserName;
-          //   nUser.uId = msg.userId;
-          //   nUser.intimacy = 1;
-          //   this.user.save(nUser)
-          // } else {
-          //   nUser = uInfo[0];
-          //   nUser.intimacy += 1;
-          //   this.user.update(nUser.id, nUser)
-          // }
-          // ChatCallBack(fish, {
-          //   oId: msg.userId,
-          //   uId: msg.userId,
-          //   user: msg.senderUserName,
-          //   type: 2,
-          //   msg: msg.preview,
-          //   detail: null
-          // });
-          //LOGGER.Log(JSON.stringify(uInfo), 0)
-          //LOGGER.Log(msg.senderUserName + '私信你说：' + msg.preview, 1);
+          if (msg.senderUserName != 'sevenSummer') {
+            ChatCallBack(fish, {
+              oId: msg.userId,
+              uId: msg.userId,
+              user: msg.senderUserName,
+              type: 2,
+              msg: msg.preview,
+              detail: null
+            });
+          }
+          LOGGER.Log(msg.senderUserName + '私信你说：' + msg.preview, 1);
           break;
       }
     });
@@ -170,8 +165,10 @@ export class AppService {
       if (msg.content.indexOf("获得") >= 0 && reg.test(msg.content)) {
         let giftNum = msg.content.match(reg)[0].replace("...", "");
         let giftName = msg.content.match(reg)[1].replace("... ", "").trim();
-        let giftUser = msg.content.match(reg)[2].split(" ")[1];
-        let uInfo = await this.user.find({ where: { user: giftUser } });
+        let giftUserInfo = msg.content.match(reg)[2].split(" ")[1];
+        let giftUser = giftUserInfo.split("|")[0];
+        let giftUid = giftUserInfo.split("|")[1];
+        let uInfo = await this.user.find({ where: { uId: giftUid } });
         let nUser = null;
         let intimacy = (giftName == "鱼丸" ? 1 : 10) * parseInt(giftNum);
         if (parseInt(giftNum) <= 0) {
@@ -180,7 +177,7 @@ export class AppService {
         if (uInfo.length == 0) {
           nUser = new User();
           nUser.user = giftUser;
-          nUser.uId = "";
+          nUser.uId = giftUid;
           nUser.intimacy = intimacy;
           this.user.save(nUser)
         } else {
@@ -198,7 +195,6 @@ export class AppService {
         });
         LOGGER.Log(giftUser + '赠送了你' + giftName + "*" + giftNum, 1);
       }
-      //LOGGER.Log(msg.senderUserName + '私信你说：' + msg.content, 1);
     }, 'sevenSummer');
   }
 }

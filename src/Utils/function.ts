@@ -134,7 +134,39 @@ export const getTianqi = function (user: string, msg: string, IceNet: any): Prom
                 color: "red"
               },
             }
+            let CodeMap = {
+              CLEAR_DAY: 9,
+              CLEAR_NIGHT: 9,
+              PARTLY_CLOUDY_DAY: 2,
+              PARTLY_CLOUDY_NIGHT: 2,
+              CLOUDY: 10,
+              LIGHT_HAZE: 7,
+              MODERATE_HAZE: 7,
+              HEAVY_HAZE: 7,
+              LIGHT_RAIN: 3,
+              MODERATE_RAIN: 3,
+              HEAVY_RAIN: 3,
+              STORM_RAIN: 3,
+              FOG: 7,
+              LIGHT_SNOW: 4,
+              MODERATE_SNOW: 4,
+              HEAVY_SNOW: 4,
+              STORM_SNOW: 4,
+              DUST: 9,
+              SAND: 9,
+              WIND: 1,
+            }
             let msg = "";
+            let tqtype = CodeMap[weatherCode[0].value];
+            const tqApi = await axios({
+              method: 'get',
+              url: `https://apis.tianapi.com/tianqishiju/index?key=${conf.weather.tianApi}&tqtype=${tqtype}`
+            })
+            if (tqApi.data.code == 200) {
+              msg += "查询的天气来啦 \n > " + tqApi.data.result.content + " \n";
+            }else{
+              msg += "查询的天气来啦 \n";
+            }
             if (alertInfo.length > 0) {
               alertInfo.forEach(items => {
                 let code = items.code.split("");
