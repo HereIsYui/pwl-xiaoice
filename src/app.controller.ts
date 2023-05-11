@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Headers } from '@nestjs/common';
 import { AppService } from './app.service';
 import { CusGuardGuard } from './cus-guard/cus-guard.guard';
 
@@ -21,5 +21,11 @@ export class AppController {
   @UseGuards(CusGuardGuard)
   XiaoIceSendMsg(@Query() query): any {
     return this.appService.XiaoIceSendMsg(query.msg)
+  }
+
+  @Get('XiaoIceSendPYQ')
+  @UseGuards(CusGuardGuard)
+  XiaoIceSendPYQ(@Headers('client_id') client_id: string, @Headers('client_secret') client_secret: string) {
+    return this.appService.SendPYQMsg();
   }
 }

@@ -13,6 +13,9 @@
         "enableSaohua": true,
         "lspWaitingTime": 1
     },
+    "keys": {
+        "point": ""
+    },
     "database": {
         "host": "",
         "user": "",
@@ -21,10 +24,10 @@
         "port": 3306
     },
     "admin": [
-        "taozhiyu",
         "Yui"
     ],
     "weather": {
-        "key": ""
+        "key": "",
+        "tianApi": ""
     }
 }

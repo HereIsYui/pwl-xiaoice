@@ -8,6 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { User } from './entities/user.entities'
 import { City } from './entities/city.entities';
 import { Client } from './entities/Client.entities';
+import { Cron } from '@nestjs/schedule';
+import axios from 'axios';
 
 @Injectable()
 export class AppService {
@@ -65,7 +67,7 @@ export class AppService {
       // 处理消息
       let ChatMsgData = msg.data as ChatMsg;
       let BarragerMsgData = msg.data as BarragerMsg;
-      let user = ChatMsgData.userName;
+      let user = ChatMsgData?.userName;
       if ((msg.type == 'barrager' || msg.type == 'msg') && user == 'xiong') {
         let msginfo = msg.type == 'barrager' ? BarragerMsgData.barragerContent : ChatMsgData.md;
         if (/(xiàmù|我).{0,10}(是帅哥|帅哥|帅)/.test(msginfo)) {
@@ -90,6 +92,7 @@ export class AppService {
         // 只处理机器人专属红包
         let packet = await this.fish.chatroom.redpacket.open(ChatMsgData.oId);
         let pointNum = (packet as any).who[0].userMoney;
+        // let intimacy = parseInt(pointNum / 10)
         let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
         let nUser = null;
         if (uInfo.length == 0) {
@@ -215,7 +218,7 @@ export class AppService {
   }
   XiaoIceSendMsg(data: any) {
     this.fish.chatroom.send(data);
-    return { code: 200, msg: "ok" }
+    return { code: 0, msg: "ok" }
   }
   async findOneByClientId(clientId: string, clientSecret: string) {
     return await this.client.findOne({
@@ -233,5 +236,22 @@ export class AppService {
     this.client.save(clientData);
     return 'ok'
   }
-
+  // 发朋友圈(清风明月)
+  @Cron('0 30 8 * * 1-5')
+  async SendPYQMsg() {
+    const pyq = await axios({
+      method: 'get',
+      url: `https://apis.tianapi.com/pyqwenan/index?key=${conf.weather.tianApi}`
+    })
+    let pyqDetail = '';
+    let cb = { code: 0, msg: '发送成功' }
+    if (pyq.data.code == 200) {
+      pyqDetail = pyq.data.result.content;
+      await this.fish.breezemoon.send(pyqDetail);
+    } else {
+      cb.code = 1;
+      cb.msg = "发送失败";
+    }
+    return cb
+  }
 }
