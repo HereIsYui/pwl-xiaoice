@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm'
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 @Entity()
 export class User {
     // id
@@ -26,7 +26,7 @@ export class User {
     @Column({ type: "varchar", default: '0' })
     auth: string
     // 用户信息更新时间
-    @CreateDateColumn({ type: "timestamp" })
+    @UpdateDateColumn({ type: "timestamp" })
     update_time: Date
     // 用户信息创建时间
     @CreateDateColumn({ type: "timestamp" })

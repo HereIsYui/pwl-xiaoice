@@ -7,6 +7,7 @@ import { Like, Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from './entities/user.entities'
 import { City } from './entities/city.entities';
+import { Client } from './entities/Client.entities';
 
 @Injectable()
 export class AppService {
@@ -14,7 +15,9 @@ export class AppService {
   isChatOpen: Boolean;
   apiKey: string;
   fish: FishPi;
-  constructor(@InjectRepository(User) private readonly user: Repository<User>, @InjectRepository(City) private readonly city: Repository<City>) {
+  constructor(@InjectRepository(User) private readonly user: Repository<User>,
+    @InjectRepository(City) private readonly city: Repository<City>,
+    @InjectRepository(Client) private readonly client: Repository<Client>) {
     this.apiKey = conf.fishpi.apiKey;
   }
   getHello(): string {
@@ -214,4 +217,21 @@ export class AppService {
     this.fish.chatroom.send(data);
     return { code: 200, msg: "ok" }
   }
+  async findOneByClientId(clientId: string, clientSecret: string) {
+    return await this.client.findOne({
+      where: {
+        client_id: clientId,
+        client_secret: clientSecret
+      }
+    })
+  }
+  addXiaoIceUser(data: any) {
+    let clientData = new Client();
+    clientData.client_id = data.client_id;
+    clientData.client_secret = data.client_secret;
+    clientData.roles = data.roles;
+    this.client.save(clientData);
+    return 'ok'
+  }
+
 }

@@ -1,5 +1,7 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
+import { CusGuardGuard } from './cus-guard/cus-guard.guard';
+
 
 @Controller()
 export class AppController {
@@ -16,11 +18,8 @@ export class AppController {
   }
 
   @Get('/XiaoIceSendMsg')
+  @UseGuards(CusGuardGuard)
   XiaoIceSendMsg(@Query() query): any {
-    if (!query.key || query.key != 'xiaoIceGame') {
-      return { code: 1, msg: "缺少参数" }
-    } else {
-      return this.appService.XiaoIceSendMsg(query.msg)
-    }
+    return this.appService.XiaoIceSendMsg(query.msg)
   }
 }
