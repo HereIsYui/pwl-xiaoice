@@ -39,6 +39,10 @@ export class AppService {
       return 'Chat Start Success!'
     }
   }
+  sendMsg(msg: string) {
+    msg = msg + `\n\n <span id='IceNet-${new Date().getTime()}'></span>`
+    this.fish.chatroom.send(msg, 'IceNet', '2.0')
+  }
   async fishGetApiKey() {
     this.fish = new FishPi();
     let rsp = await this.fish.login({
@@ -78,12 +82,12 @@ export class AppService {
             if (msg.type == 'msg') {
               await this.fish.chatroom.revoke(ChatMsgData.oId);
             }
-            this.fish.chatroom.send(`@${user} 聊天室造谣,250积分已扣除`)
+            this.sendMsg(`@${user} 聊天室造谣,250积分已扣除`)
           } else {
             if (msg.type == 'msg') {
               await this.fish.chatroom.revoke(ChatMsgData.oId);
             }
-            this.fish.chatroom.send(`@${user} 啧啧啧,你看看你 250积分都没有 还造谣`);
+            this.sendMsg(`@${user} 啧啧啧,你看看你 250积分都没有 还造谣`);
           }
           return;
         }
@@ -217,7 +221,7 @@ export class AppService {
     }, 'sevenSummer');
   }
   XiaoIceSendMsg(data: any) {
-    this.fish.chatroom.send(data);
+    this.sendMsg(data);
     return { code: 0, msg: "ok" }
   }
   async findOneByClientId(clientId: string, clientSecret: string) {
