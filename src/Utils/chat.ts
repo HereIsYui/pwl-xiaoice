@@ -17,17 +17,17 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
   switch (data.type) {
     case 0:
       // 普通消息处理
-      // for (let r of GlobalRuleList) {
-      //   if (r.rule.test(data.msg)) {
-      //     IceNet.UDetail = data.detail;
-      //     IceNet.UName = uname;
-      //     let callback = await r.func(data.user, data.msg, fish, IceNet);
-      //     if (callback) {
-      //       IceNet.sendMsg(`@${data.user} \n ${uname} ${callback}`)
-      //     }
-      //     break;
-      //   }
-      // }
+      for (let r of GlobalRuleList) {
+        if (r.rule.test(data.msg)) {
+          IceNet.UDetail = data.detail;
+          IceNet.UName = uname;
+          let callback = await r.func(data.user, data.msg, fish, IceNet);
+          if (callback) {
+            IceNet.sendMsg(`@${data.user} \n ${uname} ${callback}`)
+          }
+          break;
+        }
+      }
       break;
     case 1:
       // 专属红包消息处理
