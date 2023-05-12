@@ -34,6 +34,15 @@ export const GlobalRuleList = [{
     return cb;
   }
 }, {
+  rule: /(56c0f695|乌拉)/,
+  func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
+    let cb = '';
+    if (user != 'sevenSummer') {
+      cb = "![乌拉乌拉](https://pwl.stackoverflow.wiki/2022/03/image-56c0f695.png)";
+    }
+    return cb;
+  }
+}, {
   rule: /^禅定 \d+/,
   func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
     let cb = "禅定功能修复中~";
@@ -100,14 +109,14 @@ export const GlobalRuleList = [{
             m = 6
           }
           if (NPeople < 3) {
-            fish.chatroom.send(`风流：就这点人请我回去？你们什么档次？`);
+            IceNet.sendMsg(`风流：就这点人请我回去？你们什么档次？`);
             GlobalData.benbenArray = [];
           } else {
-            fish.chatroom.send(`开始结算，共计${NPeople}人请崖主，崖主回山${m}分钟`)
+            IceNet.sendMsg(`开始结算，共计${NPeople}人请崖主，崖主回山${m}分钟`)
             cb = `zf jy dissoluteFate ${m}`;
             GlobalData.lastbenbenTime = new Date().getTime();
             GlobalData.benbenArray = [];
-            fish.chatroom.send(cb)
+            IceNet.sendMsg(cb)
           }
         }, 15 * 1000)
       } else {
@@ -193,14 +202,16 @@ const XiaoIceRuleList = [{
     return cb;
   }
 }, {
-  rule: /叫我\w*/,
+  rule: /叫我\w{0,5}/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let uwantName = message.substring(2).trim();
     let cb = "";
     if (IceNet.UDetail.intimacy < 500) {
       cb = `${IceNet.UName},咱俩的关系还没到称呼\`${uwantName}\`的时候哦:angry:`
     } else {
-      uwantName = uwantName.replace(/(Yui|爸爸|爷爷|爹爹)/ig, user);
+      uwantName = uwantName.substring(0, 5);
+      uwantName = uwantName.replace(/(\s|-)+/g, '');
+      uwantName = uwantName.replace(/(Yui|爸|爷|爹|dad|天道|阿达|ba|主|祖|妈)/ig, '');
       if (IceNet.UDetail.user == 'xiong' && uwantName.indexOf('帅哥') >= 0) {
         uwantName = "衰哥"
       }
@@ -272,7 +283,7 @@ const XiaoIceRuleList = [{
     if (conf.admin.includes(user)) {
       let msg = await fish.account.rewardLiveness();
       let isDajie = !message.match('工资');
-      cb = `:credit_card:小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${msg >= 0 ? msg + '点积分~' : '0点积分，不要太贪心哦~'}`;
+      cb = `小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${msg >= 0 ? msg + '点积分:credit_card:' : '0点积分，不要太贪心哦~'}`;
     } else {
       cb = `本是要去的，但是转念一想，尚有这么多事情要做，便也就放弃了罢`;
     }
@@ -285,11 +296,11 @@ const XiaoIceRuleList = [{
     let now = new Date().getDate();
     if (conf.admin.includes(user)) {
       // 概率暂时设置成5%吧，以后在改成次数限制
-      if (Math.random() > 0.95) {
-        if (now != GlobalData.RedPacketDate) {
-          GlobalData.isSendRedPacket = false;
-        }
-        if (!GlobalData.isSendRedPacket) {
+      if (now != GlobalData.RedPacketDate) {
+        GlobalData.isSendRedPacket = false;
+      }
+      if (!GlobalData.isSendRedPacket) {
+        if (Math.random() > 0.95) {
           GlobalData.isSendRedPacket = true;
           GlobalData.RedPacketDate = now;
           fish.chatroom.redpacket.send({
@@ -300,17 +311,17 @@ const XiaoIceRuleList = [{
           })
           cb = "";
         } else {
-          cb = `今天已经发过了！你发我一个啊！`
+          cb = `不给了！不给了！天天找我要红包，你倒是给我一个啊！`
         }
       } else {
-        cb = `不给了！不给了！天天找我要红包，你倒是给我一个啊！`
+        cb = `今天已经发过了！你发我一个啊！`
       }
     } else {
       if (now != GlobalData.TodayRedPacketDate) {
         GlobalData.isSendTodayRedPacket = false;
       }
-      if (Math.random() > 0.95) {
-        if (!GlobalData.isSendTodayRedPacket) {
+      if (!GlobalData.isSendTodayRedPacket) {
+        if (Math.random() > 0.95) {
           GlobalData.isSendTodayRedPacket = true;
           GlobalData.TodayRedPacketDate = now;
           fish.chatroom.redpacket.send({
@@ -322,10 +333,10 @@ const XiaoIceRuleList = [{
           })
           cb = "";
         } else {
-          cb = `:neutral_face:今天发过啦~`
+          cb = `这件事已不必再提，皆因钱财不够`
         }
       } else {
-        cb = `这件事已不必再提，皆因钱财不够`
+        cb = `:neutral_face:今天发过啦~`
       }
     }
     return cb;

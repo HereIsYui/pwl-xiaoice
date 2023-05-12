@@ -96,18 +96,18 @@ export class AppService {
         // 只处理机器人专属红包
         let packet = await this.fish.chatroom.redpacket.open(ChatMsgData.oId);
         let pointNum = (packet as any).who[0].userMoney;
-        // let intimacy = parseInt(pointNum / 10)
+        let intimacy = Math.floor(pointNum / 3);
         let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
         let nUser = null;
         if (uInfo.length == 0) {
           nUser = new User();
           nUser.user = user;
           nUser.uId = ChatMsgData.userOId;
-          nUser.intimacy = pointNum;
+          nUser.intimacy = intimacy;
           this.user.save(nUser)
         } else {
           nUser = uInfo[0];
-          nUser.intimacy += pointNum;
+          nUser.intimacy += intimacy;
           this.user.update(nUser.id, nUser)
         }
         ChatCallBack(this.fish, {
@@ -117,7 +117,7 @@ export class AppService {
           type: 1,
           point: pointNum,
           detail: nUser
-        });
+        }, this);
         //LOGGER.Log(JSON.stringify(uInfo), 0)
         LOGGER.Log(`${user}给你发了一个红包,获得${pointNum}积分`, 1);
       }
@@ -176,9 +176,13 @@ export class AppService {
               type: 2,
               msg: msg.preview,
               detail: null
-            });
+            }, this);
           }
           LOGGER.Log(msg.senderUserName + '私信你说：' + msg.preview, 1);
+          break;
+        // 有新的消息通知
+        case 'refreshNotification':
+          console.log('你有新消息【', await this.fish.notice.count(), '】')
           break;
       }
     });
@@ -215,7 +219,7 @@ export class AppService {
           type: 3,
           msg: JSON.stringify({ giftNum, giftName, giftUser, intimacy }),
           detail: nUser
-        });
+        }, this);
         LOGGER.Log(giftUser + '赠送了你' + giftName + "*" + giftNum, 1);
       }
     }, 'sevenSummer');
@@ -241,7 +245,7 @@ export class AppService {
     return 'ok'
   }
   // 发朋友圈(清风明月)
-  @Cron('0 30 8 * * 1-5')
+  @Cron('0 30 10 * * 1-5')
   async SendPYQMsg() {
     const pyq = await axios({
       method: 'get',

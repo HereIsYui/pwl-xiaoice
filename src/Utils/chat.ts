@@ -20,7 +20,7 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
           IceNet.UName = uname;
           let callback = await r.func(data.user, data.msg, fish, IceNet);
           if (callback) {
-            fish.chatroom.send(`@${data.user} \n ${uname} ${callback}`)
+            IceNet.sendMsg(`@${data.user} \n ${uname} ${callback}`)
           }
           break;
         }
@@ -28,7 +28,7 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
       break;
     case 1:
       // 专属红包消息处理
-      fish.chatroom.send(`@${data.user} 谢谢${uname}送的红包:heartbeat:`);
+      IceNet.sendMsg(`@${data.user} 谢谢${uname}送的红包:heartbeat:`);
       break
     case 2:
       // 私信消息处理
@@ -38,11 +38,11 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
       // 凌 礼物处理
       let gift = JSON.parse(data.msg);
       if (gift.giftNum <= 0) {
-        fish.chatroom.send(`@${data.user} 小气鬼${uname}一个${gift.giftName}都不给我,小冰亲密度${gift.intimacy}`);
+        IceNet.sendMsg(`@${data.user} 小气鬼${uname},一个${gift.giftName}都不给我,小冰亲密度${gift.intimacy}`);
       } else if (gift.giftNum <= 5) {
-        fish.chatroom.send(`@${data.user} 谢谢小气鬼${uname}送的${gift.giftNum}个${gift.giftName},小冰亲密度+${gift.intimacy}`);
+        IceNet.sendMsg(`@${data.user} 谢谢小气鬼${uname}送的${gift.giftNum}个${gift.giftName},小冰亲密度+${gift.intimacy}`);
       } else {
-        fish.chatroom.send(`@${data.user} 谢谢${uname}送的${gift.giftNum}个${gift.giftName}:heartbeat:小冰亲密度+${gift.intimacy}`);
+        IceNet.sendMsg(`@${data.user} 谢谢${uname}送的${gift.giftNum}个${gift.giftName}:heartbeat:小冰亲密度+${gift.intimacy}`);
       }
       break
     default:
