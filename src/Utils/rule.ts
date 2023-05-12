@@ -211,7 +211,7 @@ const XiaoIceRuleList = [{
     } else {
       uwantName = uwantName.substring(0, 5);
       uwantName = uwantName.replace(/(\s|-)+/g, '');
-      uwantName = uwantName.replace(/(Yui|爸|爷|爹|dad|天道|阿达|ba|主|祖|妈)/ig, '');
+      uwantName = uwantName.replace(/(Yui|爸|爷|爹|dad|天道|阿达|ba|主|祖|妈|爺|媽|輝|辉)/ig, '');
       if (IceNet.UDetail.user == 'xiong' && uwantName.indexOf('帅哥') >= 0) {
         uwantName = "衰哥"
       }

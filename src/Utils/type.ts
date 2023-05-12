@@ -1,7 +1,7 @@
 export interface ChatMsg {
   oId: string,
-  uId: string,
-  user: string,
+  uId?: string,
+  user?: string,
   // type:消息类型 0聊天室对话 1聊天室红包 2私信
   type?: number
   msg?: string,

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import FishPi, { FingerTo, ChatData, NoticeMsg, ChatMsg, BarragerMsg, RedPacketMessage } from 'fishpi';
+import FishPi, { FingerTo, ChatData, NoticeMsg, ChatMsg, BarragerMsg, RedPacketMessage, NoticePoint } from 'fishpi';
 import { configInfo as conf, writeConfig } from './Utils/config'
 import { LOGGER } from './Utils/logger'
 import { ChatCallBack } from './Utils/chat'
@@ -8,6 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { User } from './entities/user.entities'
 import { City } from './entities/city.entities';
 import { Client } from './entities/Client.entities';
+import { Bank } from './entities/bank.entities';
+import { BankRecords } from './entities/bankrecord.entities';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 
@@ -19,7 +21,9 @@ export class AppService {
   fish: FishPi;
   constructor(@InjectRepository(User) private readonly user: Repository<User>,
     @InjectRepository(City) private readonly city: Repository<City>,
-    @InjectRepository(Client) private readonly client: Repository<Client>) {
+    @InjectRepository(Client) private readonly client: Repository<Client>,
+    @InjectRepository(Bank) private readonly bank: Repository<Bank>,
+    @InjectRepository(BankRecords) private readonly bankRecords: Repository<BankRecords>) {
     this.apiKey = conf.fishpi.apiKey;
   }
   getHello(): string {
@@ -67,6 +71,7 @@ export class AppService {
   async fishInit() {
     this.isChatOpen = true;
     this.fish = new FishPi(this.apiKey);
+
     this.fish.chatroom.addListener(async ({ msg }) => {
       // 处理消息
       let ChatMsgData = msg.data as ChatMsg;
@@ -95,29 +100,66 @@ export class AppService {
       if (msg.type == 'redPacket' && (ChatMsgData.content as RedPacketMessage).recivers.includes(conf.fishpi.nameOrEmail)) {
         // 只处理机器人专属红包
         let packet = await this.fish.chatroom.redpacket.open(ChatMsgData.oId);
-        let pointNum = (packet as any).who[0].userMoney;
+        let pointNum = (packet as any).who[conf.fishpi.nameOrEmail].userMoney;
         let intimacy = Math.floor(pointNum / 3);
-        let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
-        let nUser = null;
-        if (uInfo.length == 0) {
-          nUser = new User();
-          nUser.user = user;
-          nUser.uId = ChatMsgData.userOId;
-          nUser.intimacy = intimacy;
-          this.user.save(nUser)
+        // 判断是否为存款
+        if (packet.msg.indexOf('存') == -1) {
+          // 不是存款
+          let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
+          let nUser = null;
+          if (uInfo.length == 0) {
+            nUser = new User();
+            nUser.user = user;
+            nUser.uId = ChatMsgData.userOId;
+            nUser.intimacy = intimacy;
+            nUser.point = pointNum;
+            this.user.save(nUser)
+          } else {
+            nUser = uInfo[0];
+            nUser.intimacy += intimacy;
+            nUser.point += pointNum;
+            this.user.update(nUser.id, nUser)
+          }
+          ChatCallBack(this.fish, {
+            oId: ChatMsgData.oId,
+            uId: ChatMsgData.userOId,
+            user: user,
+            type: 1,
+            point: pointNum,
+            detail: nUser
+          }, this);
         } else {
-          nUser = uInfo[0];
-          nUser.intimacy += intimacy;
-          this.user.update(nUser.id, nUser)
+          // 银行存款
+          let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
+          let nUser = null;
+          if (uInfo.length == 0) {
+            nUser = new User();
+            nUser.user = user;
+            nUser.uId = ChatMsgData.userOId;
+            nUser.intimacy = intimacy;
+            nUser.point = pointNum;
+            this.user.save(nUser)
+          } else {
+            nUser = uInfo[0];
+            nUser.intimacy += intimacy;
+            nUser.point += pointNum;
+            this.user.update(nUser.id, nUser)
+          }
+          ChatCallBack(this.fish, {
+            oId: ChatMsgData.oId,
+            uId: ChatMsgData.userOId,
+            user: user,
+            type: 4,
+            detail: [{
+              dataId: ChatMsgData.oId,
+              user: user,
+              point: pointNum,
+              access: 0,
+              access_type: 1,
+              momo: packet.msg
+            }]
+          }, this);
         }
-        ChatCallBack(this.fish, {
-          oId: ChatMsgData.oId,
-          uId: ChatMsgData.userOId,
-          user: user,
-          type: 1,
-          point: pointNum,
-          detail: nUser
-        }, this);
         //LOGGER.Log(JSON.stringify(uInfo), 0)
         LOGGER.Log(`${user}给你发了一个红包,获得${pointNum}积分`, 1);
       }
@@ -168,7 +210,7 @@ export class AppService {
         // 新私聊消息
         case 'newIdleChatMessage':
           // msg 就是新的私聊消息
-          if (msg.senderUserName != 'sevenSummer') {
+          if (!['sevenSummer', 'xiaoIce'].includes(msg.senderUserName)) {
             ChatCallBack(this.fish, {
               oId: msg.userId,
               uId: msg.userId,
@@ -182,7 +224,39 @@ export class AppService {
           break;
         // 有新的消息通知
         case 'refreshNotification':
-          console.log('你有新消息【', await this.fish.notice.count(), '】')
+          let notice = await this.fish.notice.count();
+          if (notice.unreadPointNotificationCnt > 0) {
+            let pointInfo = await this.fish.notice.list('point');
+            await this.fish.notice.readAll();
+            if (pointInfo.code == 0) {
+              let BankRecord = [];
+              pointInfo.data.forEach((item: NoticePoint) => {
+                // 有未读的转账
+                if (item.hasRead == false && item.dataType === 6) {
+                  let reg = /(>.+<)|(\s\d+\s)|(\(.+\))/g;
+                  // console.log(item.description.match(reg))
+                  let bankUser = item.description.match(reg)[0].replace(/>|</g, "").trim();
+                  let bankPoint = item.description.match(reg)[1].trim();
+                  let bankMsg = item.description.match(reg)[2].replace(/\(|\)/g, "").trim();
+                  BankRecord.push({
+                    dataId: item.dataId,
+                    user: bankUser,
+                    point: bankPoint,
+                    access: 0,
+                    access_type: 0,
+                    momo: bankMsg
+                  })
+                  LOGGER.Succ(`储户${bankUser}存了${bankPoint}积分[备注:${bankMsg}]`, 1)
+                }
+              })
+              ChatCallBack(this.fish, {
+                oId: new Date().getTime().toString(),
+                user: '',
+                type: 4,
+                detail: BankRecord
+              }, this);
+            }
+          }
           break;
       }
     });
