@@ -12,6 +12,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use('/file', servestatic(path.join(__dirname, '../public')));
   await app.listen(conf.system.port);
+
   LOGGER.Succ('IceNet is Online, Port:' + conf.system.port, 0);
 }
 bootstrap();
