@@ -6,6 +6,9 @@ export class Bank {
     id: number
     // 鱼派用户名
     @Column({ type: "varchar", length: 255 })
+    bank_id: string
+
+    @Column({ type: "varchar", length: 255 })
     user: string
     // 鱼派uId
     @Column({ type: "varchar", length: 255 })

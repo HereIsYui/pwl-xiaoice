@@ -68,18 +68,19 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
           // 未开户&转账存款
           uRecord.is_success = 0;
           await IceNet.bankRecords.save(uRecord)
-          fish.chat.send(BankInfo.user, `【IceBank-交易失败通知】:交易积分:${BankInfo.point},交易方式:存,失败原因:用户未开户,交易单号:${OrderId},请私信交易单号给<a href="https://fishpi.cn/chat?toUser=Yui" target="_blank">Yui</a>`)
+          fish.chat.send(BankInfo.user, `【IceBank-交易失败通知】:交易积分:${BankInfo.point} \n 交易方式:存 \n 失败原因:用户未开户 \n 交易单号:${OrderId} \n 请私信交易单号给<a href="https://fishpi.cn/chat?toUser=Yui" target="_blank">Yui</a>`)
         } else if (user.length == 0 && BankInfo.access_type == 1) {
           // 未开户&红包存款
           let newUser = new Bank();
           newUser.uId = data.uId;
           newUser.user = data.user;
           newUser.point = uRecord.point;
+          newUser.bank_id = 'ICE' + (new Date().getTime()).toString();
           await IceNet.bank.save(newUser);
           uRecord.uId = data.uId;
           uRecord.is_success = 1;
           await IceNet.bankRecords.save(uRecord);
-          IceNet.sendMsg(`@${BankInfo.user} ,【IceBank-开户成功通知】:交易积分:${BankInfo.point},交易方式:存,交易单号:${OrderId}`);
+          IceNet.sendMsg(`@${BankInfo.user} ,【IceBank-开户成功通知】:交易积分:${BankInfo.point} \n 交易方式:存 \n 交易单号:${OrderId} \n 卡号:${newUser.bank_id}`);
         } else {
           // 已开户存款
           let uDetail = user[0];
@@ -87,9 +88,9 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
           uDetail.point = (parseInt(uDetail.point) + parseInt(BankInfo.point)).toString();
           if (BankInfo.access_type == 1) {
             uRecord.uId = data.uId;
-            IceNet.sendMsg(`@${BankInfo.user} ,【IceBank-交易通知】:交易积分:${BankInfo.point},交易方式:存,交易单号:${OrderId}`)
+            IceNet.sendMsg(`@${BankInfo.user} ,【IceBank-交易通知】:交易积分:${BankInfo.point} \n 交易方式:存 \n 交易单号:${OrderId}`)
           } else {
-            fish.chat.send(BankInfo.user, `【IceBank-交易通知】:交易积分:${BankInfo.point},交易方式:存,交易单号:${OrderId}`);
+            fish.chat.send(BankInfo.user, `【IceBank-交易通知】:交易积分:${BankInfo.point} \n 交易方式:存 \n 交易单号:${OrderId}`);
           }
           await IceNet.bank.update(uDetail.id, uDetail)
           await IceNet.bankRecords.save(uRecord);

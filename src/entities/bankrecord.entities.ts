@@ -24,7 +24,7 @@ export class BankRecords {
     // 本次交易后余额
     @Column({ type: "varchar", length: 255 })
     balance: string
-    // 存/取方式 0转账 1红包
+    // 存/取方式 0转账 1红包 3金手指
     @Column({ type: "int" })
     access_type: number
     // 本次交易是否成功 0失败 1成功

@@ -180,14 +180,14 @@ export class AppService {
             this.user.update(nUser.id, nUser)
           }
         }
-        // ChatCallBack(this.fish, {
-        //   oId: ChatMsgData.oId,
-        //   uId: ChatMsgData.userOId,
-        //   user: user,
-        //   type: 0,
-        //   msg: msg,
-        //   detail: nUser
-        // }, this);
+        ChatCallBack(this.fish, {
+          oId: ChatMsgData.oId,
+          uId: ChatMsgData.userOId,
+          user: user,
+          type: 0,
+          msg: msg,
+          detail: nUser
+        }, this);
         LOGGER.Log(`${user}说：${msg}`, 1)
       }
     });
@@ -229,11 +229,14 @@ export class AppService {
               pointInfo.data.forEach((item: NoticePoint) => {
                 // 有未读的转账
                 if (item.hasRead == false && item.dataType === 6) {
+                  if (item.description.indexOf('系统') >= 0) {
+                    return;
+                  }
                   let reg = /(>.+<)|(\s\d+\s)|(\(.+\))/g;
                   // console.log(item.description.match(reg))
                   let bankUser = item.description.match(reg)[0].replace(/>|</g, "").trim();
                   let bankPoint = item.description.match(reg)[1].trim();
-                  let bankMsg = item.description.match(reg)[2].replace(/\(|\)/g, "").trim();
+                  let bankMsg = item.description.match(reg)[2]?.replace(/\(|\)/g, "").trim();
                   BankRecord.push({
                     dataId: item.dataId,
                     user: bankUser,

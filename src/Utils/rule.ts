@@ -2,7 +2,10 @@ import { configInfo as conf, writeConfig } from '../Utils/config';
 import { wyydiange, setAdmin, EmptyCall, getTianqi, GetXiaoIceGameRank, getActivutyRanking, chatWithXiaoAi } from './function';
 import type FishPi from 'fishpi'
 import { LOGGER } from './logger';
+import * as dayjs from 'dayjs'
 import { Finger, FingerTo, RedPacketType } from 'fishpi';
+import { BankRecords } from 'src/entities/bankrecord.entities';
+import { Bank } from 'src/entities/bank.entities';
 
 const GlobalData = {
   pointList: [],
@@ -202,6 +205,98 @@ const XiaoIceRuleList = [{
     return cb;
   }
 }, {
+  rule: /银行(帮助|说明)?/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let cb = `\n ![IceBank](https://file.fishpi.cn/2023/05/image-c00afb3d.png) \n 当当当当,这里是IceBank \n - 存款请发专属红包并备注\`存款\`或直接转账或发送指令 [小冰 存款 金额] \n - 取款请发送指令 [小冰 取款 金额]`;
+    return cb;
+  }
+}, {
+  rule: /账户$/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let uBank = await IceNet.bank.findOne({ where: { user } });
+    let cb = '';
+    if (uBank && uBank.id) {
+      cb = `\n【IceBank:credit_card:】${uBank.point > 1000000 ? '钻石SVIP' : uBank.point > 200000 ? '铂金VIP' : ''}储户信息: \n 卡号: ${uBank.bank_id} \n 余额: ${uBank.point}积分`
+      if (uBank.point > 100000) {
+        cb += ` \n > 个,十,百,千,万,爸爸,爷爷,祖宗,(¯﹃¯)`
+      } else {
+        cb += ` \n > 存款达到20w可以定制卡号哦`
+      }
+    } else {
+      cb = `你还没有开户哦:credit_card: \n > 给小冰发专属红包开户并备注\`存款\`不备注的算赠与哦`
+    }
+    return cb;
+  }
+}, {
+  rule: /存款? \d{0,6}$/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let pointNum = Math.abs(parseInt(message.split(' ')[1] || '0'));
+    let cb = '';
+    if (pointNum <= 100000 && pointNum > 0) {
+      let userDetail = await fish.user(user);
+      let userPoint = userDetail.userPoint;
+      let OrderId = 'IceBank-' + dayjs().format('YYYYMMDDHHmmssSSS');
+      if (userPoint > pointNum) {
+        await FingerTo(conf.keys.point).editUserPoints(user, -pointNum, `IceBank-聊天室${user}存款${pointNum}积分`);
+        await FingerTo(conf.keys.point).editUserPoints('xiaoIce', pointNum, `IceBank-聊天室${user}存款${pointNum}积分`);
+        let uBank = await IceNet.bank.findOne({ where: { user } });
+        let uRecord = new BankRecords();
+        uRecord.order_id = OrderId;
+        uRecord.user = user;
+        uRecord.data_id = dayjs().valueOf().toString();
+        uRecord.point = pointNum.toString();
+        uRecord.access = 0;
+        uRecord.access_type = 3;
+        if (uBank && uBank.id) {
+          uRecord.balance = (parseInt(uBank.point) + pointNum).toString();
+          uRecord.is_success = 1;
+          await IceNet.bankRecords.save(uRecord);
+          uBank.point = (parseInt(uBank.point) + pointNum).toString();
+          await IceNet.bank.update(uBank.id, uBank);
+          cb = `【IceBank-交易通知】交易积分:${pointNum} \n 交易方式:存 \n 余额:${uBank.point} \n 交易单号:${OrderId}`
+        } else {
+          let newUser = new Bank();
+          newUser.uId = IceNet.uDetail.uId;
+          newUser.user = user;
+          newUser.point = pointNum.toString();
+          newUser.bank_id = 'ICE' + (new Date().getTime()).toString();
+          await IceNet.bank.save(newUser);
+          uRecord.uId = IceNet.uDetail.uId;
+          uRecord.is_success = 1;
+          await IceNet.bankRecords.save(uRecord);
+          IceNet.sendMsg(`@${user} ,【IceBank-开户成功通知】:交易积分:${pointNum} \n 交易方式:存 \n 交易单号:${OrderId} \n 卡号:${newUser.bank_id}`);
+        }
+      } else {
+        cb = `【IceBank-交易失败通知】交易积分:${pointNum} \n 交易方式:存 \n 失败原因:你的余额不足 \n 交易单号:${OrderId}`
+      }
+    } else {
+      cb = `【IceBank-交易失败通知】单次存取不得大于10w,不得小于0`
+    }
+    return cb;
+  }
+}, {
+  rule: /取款? \d{0,9}$/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let pointNum = Math.abs(parseInt(message.split(' ')[1] || '0'));
+    let cb = '';
+    if (pointNum > 0 && pointNum < 100000) {
+      let uBank = await IceNet.bank.findOne({ where: { user } });
+      let OrderId = 'IceBank-' + dayjs().format('YYYYMMDDHHmmssSSS');
+      if (uBank && uBank.id) {
+        if (uBank.point > pointNum) {
+          cb = `【IceBank-交易通知】交易积分:${pointNum} \n 交易方式:取 \n 本次取款将通过转账方式到账,请注意查收 \n 余额:${uBank.point - pointNum} \n 交易单号:${OrderId}`
+        } else {
+          cb = `【IceBank-交易失败通知】交易积分:${pointNum} \n 交易方式:取 \n 失败原因:你的余额不足 \n 交易单号:${OrderId}`
+        }
+      } else {
+        cb = `你还没有开户哦:credit_card: \n > 给小冰发专属红包开户并备注\`存款\`不备注的算赠与哦`
+      }
+    } else {
+      cb = `指令错误 取款指令示例[小冰 取款 100] \n > 取款最低1积分,最高10w积分`
+    }
+    return cb;
+  }
+}, {
   rule: /叫我\w{0,5}/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let uwantName = message.substring(2).trim();
@@ -210,7 +305,7 @@ const XiaoIceRuleList = [{
       cb = `${IceNet.UName},咱俩的关系还没到称呼\`${uwantName}\`的时候哦:angry:`
     } else {
       uwantName = uwantName.substring(0, 5);
-      uwantName = uwantName.replace(/(\s|-)+/g, '');
+      uwantName = uwantName.replace(/[`~!@#$^\-&*()=|{}':;',\\\[\]\.<>\/?~！@#￥……&*（）——|{}【】'；：""'。，、？\s]/g, '');
       uwantName = uwantName.replace(/(Yui|爸|爷|爹|dad|天道|阿达|ba|主|祖|妈|爺|媽|輝|辉)/ig, '');
       if (IceNet.UDetail.user == 'xiong' && uwantName.indexOf('帅哥') >= 0) {
         uwantName = "衰哥"
