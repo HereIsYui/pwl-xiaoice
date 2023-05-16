@@ -29,5 +29,8 @@
     "weather": {
         "key": "",
         "tianApi": ""
+    },
+    "chatroom": {
+        "timeout": 10
     }
 }

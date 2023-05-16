@@ -25,6 +25,26 @@ export const GlobalRuleList = [{
     return cb;
   }
 }, {
+  rule: /@xiaoIce\s+你的连接被管理员断开，请重新连接。/,
+  func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
+    let cb = '';
+    LOGGER.Log("1111", 1)
+    if (user !== '摸鱼派官方巡逻机器人') return;
+    setTimeout(async () => {
+      await fish.chatroom.reconnect({ timeout: conf.chatroom.timeout })
+      LOGGER.Log(`已重连${dayjs().valueOf()}`, 0)
+    }, conf.chatroom.timeout * 1000);
+    return cb;
+  }
+}, {
+  rule: /@xiaoIce\s+.+超过6小时未活跃/,
+  func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
+    let cb = "";
+    if (user !== '摸鱼派官方巡逻机器人') return;
+    fish.chatroom.reconnect({ timeout: conf.chatroom.timeout });
+    return cb;
+  }
+}, {
   rule: /^(添加管理|删除管理)/,
   func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
     let cb = await setAdmin(user, msg);
@@ -228,18 +248,18 @@ const XiaoIceRuleList = [{
     return cb;
   }
 }, {
-  rule: /存款? \d{0,6}$/,
+  rule: /存款? \d{0,9}$/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let pointNum = Math.abs(parseInt(message.split(' ')[1] || '0'));
     let cb = '';
-    if (pointNum <= 100000 && pointNum > 0) {
+    if (pointNum <= 100000000 && pointNum > 0) {
       let userDetail = await fish.user(user);
       let userPoint = userDetail.userPoint;
       let OrderId = 'IceBank-' + dayjs().format('YYYYMMDDHHmmssSSS');
       if (userPoint > pointNum) {
         await FingerTo(conf.keys.point).editUserPoints(user, -pointNum, `IceBank-聊天室${user}存款${pointNum}积分`);
         await FingerTo(conf.keys.point).editUserPoints('xiaoIce', pointNum, `IceBank-聊天室${user}存款${pointNum}积分`);
-        let uBank = await IceNet.bank.findOne({ where: { user } });
+        let uBank: Bank = await IceNet.bank.findOne({ where: { user } });
         let uRecord = new BankRecords();
         uRecord.order_id = OrderId;
         uRecord.user = user;
@@ -280,11 +300,25 @@ const XiaoIceRuleList = [{
     let pointNum = Math.abs(parseInt(message.split(' ')[1] || '0'));
     let cb = '';
     if (pointNum > 0 && pointNum < 100000) {
-      let uBank = await IceNet.bank.findOne({ where: { user } });
+      let uBank: Bank = await IceNet.bank.findOne({ where: { user } });
       let OrderId = 'IceBank-' + dayjs().format('YYYYMMDDHHmmssSSS');
       if (uBank && uBank.id) {
-        if (uBank.point > pointNum) {
-          cb = `【IceBank-交易通知】交易积分:${pointNum} \n 交易方式:取 \n 本次取款将通过转账方式到账,请注意查收 \n 余额:${uBank.point - pointNum} \n 交易单号:${OrderId}`
+        if (parseInt(uBank.point) > pointNum) {
+          let uRecord = new BankRecords();
+          uRecord.order_id = OrderId;
+          uRecord.user = user;
+          uRecord.data_id = dayjs().valueOf().toString();
+          uRecord.point = pointNum.toString();
+          uRecord.access = 1;
+          uRecord.access_type = 0;
+          uRecord.is_success = 1;
+          uRecord.uId = uBank.uId;
+          uRecord.balance = (parseInt(uBank.point) - pointNum).toString();
+          uBank.point = (parseInt(uBank.point) - pointNum).toString();
+          await IceNet.bank.update(uBank.id, uBank);
+          await IceNet.bankRecords.save(uRecord);
+          await fish.account.transfer(user, pointNum, `小冰银行取款${pointNum}积分`)
+          cb = `【IceBank-交易通知】交易积分:${pointNum} \n 交易方式:取 \n 本次取款将通过转账方式到账,请注意查收 \n 余额:${uBank.point} \n 交易单号:${OrderId}`
         } else {
           cb = `【IceBank-交易失败通知】交易积分:${pointNum} \n 交易方式:取 \n 失败原因:你的余额不足 \n 交易单号:${OrderId}`
         }
@@ -344,10 +378,11 @@ const XiaoIceRuleList = [{
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let cb = "";
     if (conf.admin.includes(user)) {
-      let msg = await fish.account.liveness()
-      cb = `小冰当前活跃值为：${msg}`;
+      cb = '';
+      // let msg = await fish.account.liveness()
+      IceNet.sendMsg('凌 活跃')
     } else {
-      cb = `小冰不知道你的活跃哦~`
+      cb = `小冰不知道你的活跃哦~去问问凌吧`
     }
     return cb;
   }
