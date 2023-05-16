@@ -276,12 +276,12 @@ const XiaoIceRuleList = [{
           cb = `【IceBank-交易通知】交易积分:${pointNum} \n 交易方式:存 \n 余额:${uBank.point} \n 交易单号:${OrderId}`
         } else {
           let newUser = new Bank();
-          newUser.uId = IceNet.uDetail.uId;
+          newUser.uId = IceNet.UDetail.uId;
           newUser.user = user;
           newUser.point = pointNum.toString();
           newUser.bank_id = 'ICE' + (new Date().getTime()).toString();
           await IceNet.bank.save(newUser);
-          uRecord.uId = IceNet.uDetail.uId;
+          uRecord.uId = IceNet.UDetail.uId;
           uRecord.is_success = 1;
           await IceNet.bankRecords.save(uRecord);
           IceNet.sendMsg(`@${user} ,【IceBank-开户成功通知】:交易积分:${pointNum} \n 交易方式:存 \n 交易单号:${OrderId} \n 卡号:${newUser.bank_id}`);
