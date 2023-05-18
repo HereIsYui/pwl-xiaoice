@@ -13,7 +13,7 @@ export const wyydiange = async function (user: string, message: string) {
       url: `https://service-gkae1468-1256708847.gz.apigw.tencentcs.com/release/search?keywords=${msg}&limit=1`,
     });
     let mid = res.data.result.songs[0].id;
-    let cb = `>滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=66"></iframe>`
+    let cb = `\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=66"></iframe>`
     return cb;
   } catch (error) {
     LOGGER.Err(JSON.stringify(error), 0)

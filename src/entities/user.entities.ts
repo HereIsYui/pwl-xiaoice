@@ -25,6 +25,12 @@ export class User {
     // 用户权限
     @Column({ type: "varchar", default: '0' })
     auth: string
+    // 用户背包
+    @Column({type: "varchar", default: '[]'})
+    bag:string
+    // 是否领取昨日活跃
+    @Column({type: "int", default: 0})
+    last_liveness:number
     // 用户信息更新时间
     @UpdateDateColumn({ type: "timestamp" })
     update_time: Date

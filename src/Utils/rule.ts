@@ -6,6 +6,7 @@ import * as dayjs from 'dayjs'
 import { Finger, FingerTo, RedPacketType } from 'fishpi';
 import { BankRecords } from 'src/entities/bankrecord.entities';
 import { Bank } from 'src/entities/bank.entities';
+import { UbagItem } from './type';
 
 const GlobalData = {
   pointList: [],
@@ -21,14 +22,15 @@ const GlobalData = {
 export const GlobalRuleList = [{
   rule: /^点歌/,
   func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
-    let cb = await wyydiange(user, msg);
+
+    let cb = `\n > 滴~ 你点的歌来了 `
+    cb += await wyydiange(user, msg);
     return cb;
   }
 }, {
   rule: /@xiaoIce\s+你的连接被管理员断开，请重新连接。/,
   func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
     let cb = '';
-    LOGGER.Log("1111", 1)
     if (user !== '摸鱼派官方巡逻机器人') return;
     setTimeout(async () => {
       await fish.chatroom.reconnect({ timeout: conf.chatroom.timeout })
@@ -37,11 +39,14 @@ export const GlobalRuleList = [{
     return cb;
   }
 }, {
-  rule: /@xiaoIce\s+.+超过6小时未活跃/,
+  rule: /@xiaoIce.+由于您超过6小时未活跃/,
   func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
     let cb = "";
     if (user !== '摸鱼派官方巡逻机器人') return;
-    fish.chatroom.reconnect({ timeout: conf.chatroom.timeout });
+    setTimeout(async () => {
+      await fish.chatroom.reconnect({ timeout: conf.chatroom.timeout })
+      LOGGER.Log(`已重连${dayjs().valueOf()}`, 0)
+    }, conf.chatroom.timeout * 1000);
     return cb;
   }
 }, {
@@ -60,9 +65,9 @@ export const GlobalRuleList = [{
   rule: /(56c0f695|乌拉)/,
   func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
     let cb = '';
-    if (user != 'sevenSummer') {
-      cb = "![乌拉乌拉](https://pwl.stackoverflow.wiki/2022/03/image-56c0f695.png)";
-    }
+    // if (user != 'sevenSummer') {
+    //   cb = "![乌拉乌拉](https://pwl.stackoverflow.wiki/2022/03/image-56c0f695.png)";
+    // }
     return cb;
   }
 }, {
@@ -282,6 +287,7 @@ const XiaoIceRuleList = [{
           newUser.bank_id = 'ICE' + (new Date().getTime()).toString();
           await IceNet.bank.save(newUser);
           uRecord.uId = IceNet.UDetail.uId;
+          uRecord.balance = '0';
           uRecord.is_success = 1;
           await IceNet.bankRecords.save(uRecord);
           IceNet.sendMsg(`@${user} ,【IceBank-开户成功通知】:交易积分:${pointNum} \n 交易方式:存 \n 交易单号:${OrderId} \n 卡号:${newUser.bank_id}`);
@@ -299,7 +305,7 @@ const XiaoIceRuleList = [{
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let pointNum = Math.abs(parseInt(message.split(' ')[1] || '0'));
     let cb = '';
-    if (pointNum > 0 && pointNum < 100000) {
+    if (pointNum > 0 && pointNum < 100000000) {
       let uBank: Bank = await IceNet.bank.findOne({ where: { user } });
       let OrderId = 'IceBank-' + dayjs().format('YYYYMMDDHHmmssSSS');
       if (uBank && uBank.id) {
@@ -378,11 +384,10 @@ const XiaoIceRuleList = [{
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let cb = "";
     if (conf.admin.includes(user)) {
-      cb = '';
       // let msg = await fish.account.liveness()
       IceNet.sendMsg('凌 活跃')
     } else {
-      cb = `小冰不知道你的活跃哦~去问问凌吧`
+      IceNet.sendMsg(`凌 活跃 ${user}`)
     }
     return cb;
   }
@@ -410,12 +415,88 @@ const XiaoIceRuleList = [{
   rule: /(去打劫|发工资)了?吗?$/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let cb = "";
-    if (conf.admin.includes(user)) {
-      let msg = await fish.account.rewardLiveness();
-      let isDajie = !message.match('工资');
-      cb = `小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${msg >= 0 ? msg + '点积分:credit_card:' : '0点积分，不要太贪心哦~'}`;
+    let liveness = 0;
+    let isDajie = !message.match('工资');
+    if (IceNet.UDetail.last_liveness == 0) {
+      liveness = await FingerTo(conf.keys.liveness).getYesterDayLivenessReward(user);
+      cb = `小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${liveness >= 0 ? liveness + '点积分:credit_card:' : '0点积分，不要太贪心哦~'}`;
+      let toDaySeed = parseInt((Math.random() * 100).toString());
+      let uBag: UbagItem[] = JSON.parse(IceNet.UDetail.bag);
+      if (toDaySeed <= 40) {
+        cb += `\n 🎉🎉🎉鸿运当头🎉🎉🎉 \n `
+        cb += `嘻嘻,小冰骗你的~小冰什么都没捡到哦`
+        cb += `\n > 发送\`小冰 背包\`可以查看当前背包信息`
+      } else if (toDaySeed > 40 && toDaySeed <= 45) {
+        cb += `\n 🎉🎉🎉鸿运当头🎉🎉🎉 \n `
+        cb += `${IceNet.UName}! ${IceNet.UName}! 小冰捡到了\`免签卡碎片\`一张,已经放入${IceNet.UName}的背包啦~`
+        cb += `\n > 发送\`小冰 背包\`可以查看当前背包信息`
+        if (uBag.length == 0) {
+          uBag.push({ name: "免签卡碎片", num: 1 })
+        } else {
+          uBag.forEach(i => {
+            if (i.name == "免签卡碎片") {
+              i.num += 1
+            }
+          });
+        }
+      } else if (toDaySeed < 70) {
+        cb += `\n ${IceNet.UName}! ${IceNet.UName}! 我在路上看到阿达了,还给我了一张签名照。`;
+        if (uBag.length == 0) {
+          uBag.push({ name: "阿达的签名照", num: 1 })
+        } else {
+          uBag.forEach(i => {
+            if (i.name == "阿达的签名照") {
+              i.num += 1
+            }
+          });
+        }
+      } else {
+        cb += `\n ${IceNet.UName}! ${IceNet.UName}! 凌被妖怪抓走了(╥╯^╰╥) 快v我50去报警`
+      }
+      IceNet.UDetail.bag = JSON.stringify(uBag);
+      IceNet.UDetail.last_liveness = 1;
+      await IceNet.user.update(IceNet.UDetail.id, IceNet.UDetail);
     } else {
-      cb = `本是要去的，但是转念一想，尚有这么多事情要做，便也就放弃了罢`;
+      cb = `小冰今天已经${isDajie ? '打劫过' : '领过工资'}啦~ \n > 小冰打劫是领取昨日活跃哦, 让小冰帮你领取有概率获得免签卡碎片~`
+    }
+    return cb;
+  }
+}, {
+  rule: /^背包$/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let cb = '';
+    let uBag: UbagItem[] = JSON.parse(IceNet.UDetail.bag);
+    if (uBag.length == 0) {
+      cb += `\n > 你瞅了瞅你的背包, 忍不住高歌一曲`
+      cb += await wyydiange(user, '空空如也');
+    } else {
+      cb += `当前存货:`
+      uBag.forEach(i => {
+        cb += `\n \`${i.name}\`*${i.num}个`
+      });
+    }
+    return cb;
+  }
+}, {
+  rule: /^兑换 .{0,5}$/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let cb = '';
+    let item = message.split(" ")[1];
+    if (["免签卡"].includes(item)) {
+      let uBag: UbagItem[] = JSON.parse(IceNet.UDetail.bag);
+      if (uBag.length == 0) {
+        cb = `你还没有获得免签卡碎片呢!`
+      } else {
+        uBag.forEach(i => {
+          if (i.name == "免签卡" && i.num >= 3) {
+            cb = `兑换成功, 免签卡将直接到账背包, 请注意查收`
+          } else {
+            cb = `兑换失败, 免签卡碎片不够哦`
+          }
+        });
+      }
+    } else {
+      cb = `啊啊啊 小冰没有这个道具啊`
     }
     return cb;
   }
@@ -430,7 +511,7 @@ const XiaoIceRuleList = [{
         GlobalData.isSendRedPacket = false;
       }
       if (!GlobalData.isSendRedPacket) {
-        if (Math.random() > 0.95) {
+        if (Math.random() > 0.99) {
           GlobalData.isSendRedPacket = true;
           GlobalData.RedPacketDate = now;
           fish.chatroom.redpacket.send({
@@ -451,7 +532,7 @@ const XiaoIceRuleList = [{
         GlobalData.isSendTodayRedPacket = false;
       }
       if (!GlobalData.isSendTodayRedPacket) {
-        if (Math.random() > 0.95) {
+        if (Math.random() > 0.99) {
           GlobalData.isSendTodayRedPacket = true;
           GlobalData.TodayRedPacketDate = now;
           fish.chatroom.redpacket.send({

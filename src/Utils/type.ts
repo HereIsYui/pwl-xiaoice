@@ -10,3 +10,8 @@ export interface ChatMsg {
   // 用户信息
   detail?: any
 }
+
+export interface UbagItem {
+  name: string,
+  num: number
+}

@@ -166,19 +166,15 @@ export class AppService {
         msg = msg.replace(/\n>.*/g, "");
         msg = msg.trim();
         let nUser = null;
-        if (/^小冰/.test(msg)) {
-          let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
-          if (uInfo.length == 0) {
-            nUser = new User();
-            nUser.user = user;
-            nUser.uId = ChatMsgData.userOId;
-            nUser.intimacy = 1;
-            this.user.save(nUser)
-          } else {
-            nUser = uInfo[0];
-            nUser.intimacy += 1;
-            this.user.update(nUser.id, nUser)
-          }
+        let uInfo = await this.user.find({ where: { uId: ChatMsgData.userOId } });
+        if (uInfo.length == 0) {
+          nUser = new User();
+          nUser.user = user;
+          nUser.uId = ChatMsgData.userOId;
+          nUser.intimacy = 0;
+          this.user.save(nUser)
+        } else {
+          nUser = uInfo[0]
         }
         ChatCallBack(this.fish, {
           oId: ChatMsgData.oId,
@@ -329,6 +325,8 @@ export class AppService {
     if (pyq.data.code == 200) {
       pyqDetail = pyq.data.result.content;
       await this.fish.breezemoon.send(pyqDetail);
+      // 顺便领取下昨日活跃
+      await this.fish.account.rewardLiveness();
     } else {
       cb.code = 1;
       cb.msg = "发送失败";

@@ -24,6 +24,10 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
           let callback = await r.func(data.user, data.msg, fish, IceNet);
           if (callback) {
             IceNet.sendMsg(`@${data.user} \n ${uname} ${callback}`)
+            data.detail.intimacy = data.detail.intimacy + 1;
+            if(data.detail.id){
+              IceNet.user.update(data.detail.id, data.detail)
+            }
           }
           break;
         }
