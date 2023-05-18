@@ -333,4 +333,9 @@ export class AppService {
     }
     return cb
   }
+  // 重置每日活跃领取
+  @Cron('0 0 0 * * *')
+  resetUserLiveness() {
+    this.user.update({ last_liveness: 1 }, { last_liveness: 0 })
+  }
 }
