@@ -468,7 +468,7 @@ const XiaoIceRuleList = [{
     let uBag: UbagItem[] = JSON.parse(IceNet.UDetail.bag);
     if (uBag.length == 0) {
       cb += `\n > 你瞅了瞅你的背包, 忍不住高歌一曲`
-      cb += await wyydiange(user, '空空如也');
+      cb += `\n <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=2005811997&auto=0&height=66"></iframe>`;
     } else {
       cb += `当前存货:`
       uBag.forEach(i => {
