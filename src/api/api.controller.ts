@@ -12,4 +12,9 @@ export class ApiController {
     if (!query.user) return { code: 1, msg: 'user是必填的' }
     return this.apiService.GetUserIntimacy(query.user);
   }
+
+  @Get('UpdateUserCreditScore')
+  UpdateUserCreditScore() {
+    return this.apiService.UpdateUserCreditScore();
+  }
 }

@@ -14,7 +14,9 @@
         "lspWaitingTime": 1
     },
     "keys": {
-        "point": ""
+        "point": "",
+        "liveness": "",
+        "elves": ""
     },
     "database": {
         "host": "",
