@@ -3,7 +3,7 @@ import FishPi, { FingerTo, ChatData, NoticeMsg, ChatMsg, BarragerMsg, RedPacket,
 import { configInfo as conf, writeConfig } from './Utils/config'
 import { LOGGER } from './Utils/logger'
 import { ChatCallBack } from './Utils/chat'
-import { Like, Repository } from 'typeorm'
+import { MoreThan, Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from './entities/user.entities'
 import { City } from './entities/city.entities';
@@ -12,6 +12,10 @@ import { Bank } from './entities/bank.entities';
 import { BankRecords } from './entities/bankrecord.entities';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
+import * as md5 from 'md5';
+import { Credit } from './entities/credit.entities';
+import * as dayjs from 'dayjs'
+import { ElvesUser } from './Utils/type';
 
 @Injectable()
 export class AppService {
@@ -23,7 +27,8 @@ export class AppService {
     @InjectRepository(City) private readonly city: Repository<City>,
     @InjectRepository(Client) private readonly client: Repository<Client>,
     @InjectRepository(Bank) private readonly bank: Repository<Bank>,
-    @InjectRepository(BankRecords) private readonly bankRecords: Repository<BankRecords>) {
+    @InjectRepository(BankRecords) private readonly bankRecords: Repository<BankRecords>,
+    @InjectRepository(Credit) private readonly credit: Repository<Credit>) {
     this.apiKey = conf.fishpi.apiKey;
   }
   getHello(): string {
@@ -337,5 +342,75 @@ export class AppService {
   @Cron('0 0 0 * * *')
   resetUserLiveness() {
     this.user.update({ last_liveness: 1 }, { last_liveness: 0 })
+  }
+  // 每周一重置信用分
+  @Cron('0 0 0 * * 1')
+  async ResizeUserCreditScore() {
+    await this.credit.update({}, {
+      activity_times: 0,
+      liveness_times: 0,
+      redpack_times: 0,
+      redpack_money: 0,
+      dog_times: 0,
+      dog_money: 0
+    })
+  }
+  // 每天0点10分更新
+  @Cron('0 10 0 * * *')
+  async UpdateUserCreditScore() {
+    let IceUser = await this.user.find({ select: ['uId', 'user', 'intimacy'], where: { intimacy: MoreThan(10) } });
+    let data = null;
+    if (IceUser.length > 0) {
+      for (let i = 0; i < IceUser.length; i++) {
+        let u = IceUser[i];
+        let sign = md5(`${u.user}${conf.keys.elves}${dayjs().format('YYYY-MM-DD')}${conf.keys.elves}${u.user}`);
+        console.log(u.user, sign)
+        let elvesUser = await axios({
+          url: `https://fish.elves.online/ice/credit/get?user=${u.user}&sign=${sign}`,
+          method: 'GET'
+        })
+        if (elvesUser.data.code == 0) {
+          let CreditUser = await this.credit.findOne({ where: { user: u.user } });
+          let isNewCredit: boolean = false;
+          if (!(CreditUser && CreditUser.id)) {
+            CreditUser = new Credit();
+            isNewCredit = true;
+            CreditUser.user = u.user;
+            CreditUser.uId = u.uId;
+          }
+          // 分值计算
+          // 基础分计算
+          let dayScore = Math.floor(dayjs().diff(dayjs(parseInt(u.uId)), 'month', true) * 5);
+          let iceScore = Math.floor(u.intimacy * 0.078125);
+          CreditUser.base_score = (dayScore + iceScore) > 200 ? 200 : (dayScore + iceScore);
+          // 活跃分
+          let elvesInfo: ElvesUser = elvesUser.data.data;
+          CreditUser.activity_times = (CreditUser.activity_times || 0) + elvesInfo.moisture;
+          let weekScore = Math.floor(CreditUser.activity_times / (dayjs().day() === 0 ? 7 : dayjs().day()));
+          CreditUser.activity_score = weekScore > 200 ? 200 : weekScore;
+          // 奖励分
+          let livenessScore = (CreditUser.liveness_times || 0) * 10;
+          let redpackScore = elvesInfo.sendMoney + elvesInfo.send * 20;
+          CreditUser.redpack_money = (CreditUser.redpack_money || 0) + elvesInfo.sendMoney;
+          CreditUser.redpack_times = (CreditUser.redpack_times || 0) + elvesInfo.send;
+          CreditUser.reward_score = (livenessScore + redpackScore) > 200 ? 200 : (livenessScore + redpackScore);
+          // 赌狗分
+          let dogScore = 100 + elvesInfo.dogOpenMoney + elvesInfo.dogSend * 5;
+          if (elvesInfo.dogSend === 0) {
+            dogScore = 100
+          }
+          dogScore = dogScore < 0 ? 0 : (dogScore > 200 ? 200 : dogScore);
+          CreditUser.dog_money = (CreditUser.dog_money || 0) + elvesInfo.dogSendMoney;
+          CreditUser.dog_times = (CreditUser.dog_times || 0) + elvesInfo.dogSend;
+          CreditUser.credit_score = dogScore;
+          if (isNewCredit) {
+            this.credit.save(CreditUser);
+          } else {
+            this.credit.update(CreditUser.id, CreditUser);
+          }
+        }
+      }
+      return { code: 0, msg: 'ok' }
+    }
   }
 }

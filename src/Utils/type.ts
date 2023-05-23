@@ -15,3 +15,15 @@ export interface UbagItem {
   name: string,
   num: number
 }
+
+export interface ElvesUser {
+  dogOpenMoney: number,
+  dogSendMoney: number,
+  moisture: number,
+  dogOpen: number,
+  send: number,
+  openMoney: number,
+  open: number,
+  dogSend: number,
+  sendMoney: number
+}

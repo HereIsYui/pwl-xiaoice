@@ -364,6 +364,24 @@ const XiaoIceRuleList = [{
     return cb;
   }
 }, {
+  rule: /信用分/,
+  func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
+    let Info = await IceNet.credit.find({ where: { user } });
+    let cb = '';
+    if (Info.length !== 0) {
+      let IceScore = Info[0].base_score + Info[0].activity_score + Info[0].reward_score + Info[0].dog_money;
+      cb = `当前信用分为: ${IceScore}:star2:`;
+      cb += `\n - 基础分: ${Info[0].base_score} \'分值构成: 注册时长最高+120分, 小冰亲密度最高+80分\'`
+      cb += `\n - 活跃分: ${Info[0].activity_score} \'分值构成: 本周周跃情况最高+200分\'`
+      cb += `\n - 奖励分: ${Info[0].reward_score} \'分值构成: 每天找小冰打劫最高+70分, 每天发红包最高+130分\'`
+      cb += `\n - 赌狗分: ${Info[0].dog_money} \'分值构成: 基础100分, 按赌狗红包输赢和次数加减\'`
+      cb += `\n > 信用分每天更新,每周重置`
+    } else {
+      cb = '暂无信用记录'
+    }
+    return cb;
+  }
+}, {
   rule: /^我是(姐姐|哥哥)/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let gender = message.indexOf('哥哥') >= 0 ? 1 : 0;
@@ -456,6 +474,11 @@ const XiaoIceRuleList = [{
       IceNet.UDetail.bag = JSON.stringify(uBag);
       IceNet.UDetail.last_liveness = 1;
       await IceNet.user.update(IceNet.UDetail.id, IceNet.UDetail);
+      let creditUser = await IceNet.credit.find({ where: { user } });
+      if (creditUser.length !== 0) {
+        creditUser[0].liveness_times = (creditUser[0].liveness_times || 0) + 1
+        await IceNet.credit.update(creditUser[0].id, creditUser[0]);
+      }
     } else {
       cb = `小冰今天已经${isDajie ? '打劫过' : '领过工资'}啦~ \n > 小冰打劫是领取昨日活跃哦, 让小冰帮你领取有概率获得免签卡碎片~`
     }

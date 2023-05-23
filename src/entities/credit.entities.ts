@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-// 每周更新(注册时长150分，小冰亲密度50分)+活跃分(每月活跃情况200分)+奖励分(领取昨日活跃+发红包+发帖共计200分)+赌狗分(按赌狗红包次数±) 满分600分
+// 每周更新(注册时长120分，小冰亲密度80分)+活跃分(每周活跃情况200分)+奖励分(本周昨日活跃领取次数70+发红包共计200分)+赌狗分(按赌狗红包次数±) 满分600分
 @Entity()
 export class Credit {
     // id

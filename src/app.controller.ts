@@ -28,4 +28,9 @@ export class AppController {
   XiaoIceSendPYQ(@Headers('client_id') client_id: string, @Headers('client_secret') client_secret: string) {
     return this.appService.SendPYQMsg();
   }
+
+  @Get('UpdateUserCreditScore')
+  UpdateUserCreditScore() {
+    return this.appService.UpdateUserCreditScore();
+  }
 }
