@@ -390,10 +390,10 @@ export class AppService {
           CreditUser.activity_score = weekScore > 200 ? 200 : weekScore;
           // 奖励分
           let livenessScore = (CreditUser.liveness_times || 0) * 10;
-          let redpackScore = elvesInfo.sendMoney + elvesInfo.send * 20;
+          let redpackScore = elvesInfo.sendMoney + elvesInfo.send / 10;
           CreditUser.redpack_money = (CreditUser.redpack_money || 0) + elvesInfo.sendMoney;
           CreditUser.redpack_times = (CreditUser.redpack_times || 0) + elvesInfo.send;
-          CreditUser.reward_score = (livenessScore + redpackScore) > 200 ? 200 : (livenessScore + redpackScore);
+          CreditUser.reward_score = (livenessScore + redpackScore) > 100 ? 100 : (livenessScore + redpackScore);
           // 赌狗分
           let dogScore = 100 + elvesInfo.dogOpenMoney + elvesInfo.dogSend * 5;
           if (elvesInfo.dogSend === 0) {

@@ -39,7 +39,7 @@ export const GlobalRuleList = [{
     return cb;
   }
 }, {
-  rule: /@xiaoIce.+由于您超过6小时未活跃/,
+  rule: /由于您超过6小时未活跃/,
   func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
     let cb = "";
     if (user !== '摸鱼派官方巡逻机器人') return;
@@ -369,15 +369,15 @@ const XiaoIceRuleList = [{
     let Info = await IceNet.credit.find({ where: { user } });
     let cb = '';
     if (Info.length !== 0) {
-      let IceScore = Info[0].base_score + Info[0].activity_score + Info[0].reward_score + Info[0].dog_money;
+      let IceScore = Info[0].base_score + Info[0].activity_score + Info[0].reward_score + Info[0].credit_score;
       cb = `当前信用分为: ${IceScore}:star2:`;
       cb += `\n - 基础分: ${Info[0].base_score} \'分值构成: 注册时长最高+120分, 小冰亲密度最高+80分\'`
       cb += `\n - 活跃分: ${Info[0].activity_score} \'分值构成: 本周周跃情况最高+200分\'`
       cb += `\n - 奖励分: ${Info[0].reward_score} \'分值构成: 每天找小冰打劫最高+70分, 每天发红包最高+130分\'`
-      cb += `\n - 赌狗分: ${Info[0].dog_money} \'分值构成: 基础100分, 按赌狗红包输赢和次数加减\'`
+      cb += `\n - 赌狗分: ${Info[0].credit_score} \'分值构成: 基础100分, 按赌狗红包输赢和次数加减\'`
       cb += `\n > 信用分每天更新,每周重置`
     } else {
-      cb = '暂无信用记录'
+      cb = '暂无信用记录 \n > 小冰亲密度达到10以上, 第二天才会计算信用分哦'
     }
     return cb;
   }
