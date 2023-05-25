@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as servestatic from 'serve-static';
 import * as path from 'path'
-import { configInfo as conf, writeConfig } from './Utils/config'
+import { configInfo as conf } from './Utils/config'
 import { LOGGER } from './Utils/logger'
 import fetch from 'node-fetch'
 globalThis.fetch = fetch as any;
