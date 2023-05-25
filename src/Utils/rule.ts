@@ -451,22 +451,32 @@ const XiaoIceRuleList = [{
         if (uBag.length == 0) {
           uBag.push({ name: "免签卡碎片", num: 1 })
         } else {
+          let hasItem: boolean = false;
           uBag.forEach(i => {
             if (i.name == "免签卡碎片") {
-              i.num += 1
+              i.num += 1;
+              hasItem = true;
             }
           });
+          if (!hasItem) {
+            uBag.push({ name: "免签卡碎片", num: 1 })
+          }
         }
       } else if (toDaySeed < 70) {
         cb += `\n ${IceNet.UName}! ${IceNet.UName}! 我在路上看到阿达了,还给我了一张签名照。`;
         if (uBag.length == 0) {
           uBag.push({ name: "阿达的签名照", num: 1 })
         } else {
+          let hasItem: boolean = false;
           uBag.forEach(i => {
             if (i.name == "阿达的签名照") {
-              i.num += 1
+              i.num += 1;
+              hasItem = true;
             }
           });
+          if (!hasItem) {
+            uBag.push({ name: "阿达的签名照", num: 1 })
+          }
         }
       } else {
         cb += `\n ${IceNet.UName}! ${IceNet.UName}! 凌被妖怪抓走了(╥╯^╰╥) 快v我50去报警`

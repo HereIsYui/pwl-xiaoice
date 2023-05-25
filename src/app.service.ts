@@ -395,7 +395,7 @@ export class AppService {
           CreditUser.redpack_times = (CreditUser.redpack_times || 0) + elvesInfo.send;
           CreditUser.reward_score = (livenessScore + redpackScore) > 100 ? 100 : (livenessScore + redpackScore);
           // 赌狗分
-          let dogScore = 100 + elvesInfo.dogOpenMoney + elvesInfo.dogSend * 5;
+          let dogScore = 100 + elvesInfo.dogOpenMoney - elvesInfo.dogSend * 5;
           if (elvesInfo.dogSend === 0) {
             dogScore = 100
           }
