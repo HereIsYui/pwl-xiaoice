@@ -204,7 +204,6 @@ export class AppService {
       switch (msg.command) {
         // 私聊未读数更新
         case 'chatUnreadCountRefresh':
-
           if (msg.count > 0) {
             let unreadMsgs = await this.fish.chat.unread();
             console.log(unreadMsgs)
@@ -223,6 +222,7 @@ export class AppService {
               detail: null
             }, this);
           }
+          this.fish.chat.markRead(msg.senderUserName);
           LOGGER.Log(msg.senderUserName + '私信你说：' + msg.preview, 1);
           break;
         // 有新的消息通知
@@ -266,43 +266,6 @@ export class AppService {
           break;
       }
     });
-
-    this.fish.chat.addListener(async ({ msg }: { msg: ChatData }) => {
-      let reg = /(\.\.\.\d+)|(:\s.+\s赠)|(\.\.\.\s.{2})/g;
-      if (msg.content.indexOf("获得") >= 0 && reg.test(msg.content)) {
-        let giftNum = msg.content.match(reg)[0].replace("...", "");
-        let giftName = msg.content.match(reg)[1].replace("... ", "").trim();
-        let giftUserInfo = msg.content.match(reg)[2].split(" ")[1];
-        let giftUser = giftUserInfo.split("|")[0];
-        let giftUid = giftUserInfo.split("|")[1];
-        let uInfo = await this.user.find({ where: { uId: giftUid } });
-        let nUser = null;
-        let intimacy = (giftName == "鱼丸" ? 1 : 10) * parseInt(giftNum);
-        if (parseInt(giftNum) <= 0) {
-          intimacy = -10
-        }
-        if (uInfo.length == 0) {
-          nUser = new User();
-          nUser.user = giftUser;
-          nUser.uId = giftUid;
-          nUser.intimacy = intimacy;
-          this.user.save(nUser)
-        } else {
-          nUser = uInfo[0];
-          nUser.intimacy += intimacy;
-          this.user.update(nUser.id, nUser)
-        }
-        ChatCallBack(this.fish, {
-          oId: msg.oId,
-          uId: msg.fromId,
-          user: giftUser,
-          type: 3,
-          msg: JSON.stringify({ giftNum, giftName, giftUser, intimacy }),
-          detail: nUser
-        }, this);
-        LOGGER.Log(giftUser + '赠送了你' + giftName + "*" + giftNum, 1);
-      }
-    }, 'sevenSummer');
   }
   XiaoIceSendMsg(data: any) {
     this.sendMsg(data);
@@ -323,6 +286,35 @@ export class AppService {
     clientData.roles = data.roles;
     this.client.save(clientData);
     return 'ok'
+  }
+  async updateXiaoIceIntimacy(data: any) {
+    let uInfo = await this.user.find({ where: { uId: data.uId } });
+    let nUser = null;
+    let intimacy = (data.item == "鱼丸" ? 1 : 10) * parseInt(data.num);
+    if (parseInt(data.num) <= 0) {
+      intimacy = -10
+    }
+    if (uInfo.length == 0) {
+      nUser = new User();
+      nUser.user = data.user;
+      nUser.uId = data.uId;
+      nUser.intimacy = intimacy;
+      this.user.save(nUser)
+    } else {
+      nUser = uInfo[0];
+      nUser.intimacy += intimacy;
+      this.user.update(nUser.id, nUser)
+    }
+    ChatCallBack(this.fish, {
+      oId: data.uId,
+      uId: data.uId,
+      user: data.user,
+      type: 3,
+      msg: JSON.stringify({ ...data, intimacy }),
+      detail: nUser
+    }, this);
+    LOGGER.Log(data.user + '赠送了你' + data.item + "*" + data.num, 1);
+    return { code: 0, message: 'ok' }
   }
   // 发朋友圈(清风明月)
   @Cron('0 30 10 * * 1-5')

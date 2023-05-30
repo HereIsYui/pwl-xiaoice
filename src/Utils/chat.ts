@@ -44,12 +44,12 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
     case 3:
       // 凌 礼物处理
       let gift = JSON.parse(data.msg);
-      if (gift.giftNum <= 0) {
-        IceNet.sendMsg(`@${data.user} 小气鬼${uname},一个${gift.giftName}都不给我,小冰亲密度${gift.intimacy}`);
-      } else if (gift.giftNum <= 5) {
-        IceNet.sendMsg(`@${data.user} 谢谢小气鬼${uname}送的${gift.giftNum}个${gift.giftName},小冰亲密度+${gift.intimacy}`);
+      if (gift.num <= 0) {
+        IceNet.sendMsg(`@${data.user} 小气鬼${uname},一个${gift.item}都不给我,小冰亲密度${gift.intimacy}`);
+      } else if (gift.num <= 5) {
+        IceNet.sendMsg(`@${data.user} 谢谢小气鬼${uname}送的${gift.num}个${gift.item},小冰亲密度+${gift.intimacy}`);
       } else {
-        IceNet.sendMsg(`@${data.user} 谢谢${uname}送的${gift.giftNum}个${gift.giftName}:heartbeat:小冰亲密度+${gift.intimacy}`);
+        IceNet.sendMsg(`@${data.user} 谢谢${uname}送的${gift.num}个${gift.item}:heartbeat:小冰亲密度+${gift.intimacy}`);
       }
       break
     case 4:
