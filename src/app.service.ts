@@ -23,6 +23,7 @@ export class AppService {
   isChatOpen: Boolean;
   apiKey: string;
   fish: FishPi;
+  GLOBAL_MSG_OID: string[];
   constructor(@InjectRepository(User) private readonly user: Repository<User>,
     @InjectRepository(City) private readonly city: Repository<City>,
     @InjectRepository(Client) private readonly client: Repository<Client>,
@@ -30,6 +31,7 @@ export class AppService {
     @InjectRepository(BankRecords) private readonly bankRecords: Repository<BankRecords>,
     @InjectRepository(Credit) private readonly credit: Repository<Credit>) {
     this.apiKey = conf.fishpi.apiKey;
+    this.GLOBAL_MSG_OID = [];
   }
   getHello(): string {
     return '🥪Hi,这里是fishpi.cn的小冰机器人!';
@@ -49,7 +51,7 @@ export class AppService {
     }
   }
   sendMsg(msg: string) {
-    msg = msg + `\n\n <span id='IceNet-${new Date().getTime()}'></span>`
+    msg = msg + `\n\n <span class='IceNet-${new Date().getTime()}'></span>`
     this.fish.chatroom.send(msg)
   }
   async fishGetApiKey() {
@@ -167,6 +169,10 @@ export class AppService {
       // 聊天消息处理 (不处理机器人消息)
       if (msg.type == 'msg' && !['admin', 'xiaoIce', 'fishpi'].includes(user)) {
         let msg = ChatMsgData.md;
+        this.GLOBAL_MSG_OID.unshift(ChatMsgData.oId);
+        if (this.GLOBAL_MSG_OID.length >= 2000) {
+          this.GLOBAL_MSG_OID = this.GLOBAL_MSG_OID.splice(0, 500)
+        }
         msg = msg.replace(/<span[^>]*?>(<\/span>)*$/, "");
         msg = msg.replace(/\n>.*/g, "");
         msg = msg.trim();

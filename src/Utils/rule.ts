@@ -226,7 +226,7 @@ const XiaoIceRuleList = [{
 }, {
   rule: /我是谁|叫我什么/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
-    let cb = `当然是: ${IceNet.UName}啦:blush:`;
+    let cb = `当然是: ${IceNet.UName}啦:blush:  \n > 注意 首次命名免费, 之后每次改名消耗50亲密度`;
     return cb;
   }
 }, {
@@ -342,16 +342,20 @@ const XiaoIceRuleList = [{
     let uwantName = message.substring(2).trim();
     let cb = "";
     if (IceNet.UDetail.intimacy < 500) {
-      cb = `${IceNet.UName},咱俩的关系还没到称呼\`${uwantName}\`的时候哦:angry:`
+      cb = `${IceNet.UName},咱俩的关系还没到称呼\`${uwantName}\`的时候哦:angry: \n > 注意 首次命名免费, 之后每次改名消耗50亲密度`
     } else {
       uwantName = uwantName.substring(0, 5);
       uwantName = uwantName.replace(/[`~!@#$^\-&*()=|{}':;',\\\[\]\.<>\/?~！@#￥……&*（）——|{}【】'；：""'。，、？\s]/g, '');
-      uwantName = uwantName.replace(/(Yui|爸|爷|爹|dad|天道|阿达|ba|主|祖|妈|爺|媽|輝|辉)/ig, '');
+      uwantName = uwantName.replace(/(Yui|爸|爷|爹|dad|天道|阿达|ba|主|祖|妈|爺|媽|輝|辉|逼|b)/ig, '');
       if (IceNet.UDetail.user == 'xiong' && uwantName.indexOf('帅哥') >= 0) {
         uwantName = "衰哥"
       }
-      cb = `好的~以后我就叫你${uwantName}啦:stuck_out_tongue_winking_eye:`;
+      cb = `好的~以后我就叫你${uwantName}啦:stuck_out_tongue_winking_eye: \n > 注意 首次命名免费, 之后每次改名消耗50亲密度`;
       let nUser = IceNet.UDetail;
+      if (nUser.nick_name != "") {
+        nUser.intimacy = nUser.intimacy - 50;
+        cb += '\n > 天天改名, 天天改名! 小冰快记不住啦!'
+      }
       nUser.nick_name = uwantName;
       IceNet.user.update(nUser.id, nUser)
     }
@@ -599,8 +603,9 @@ const XiaoIceRuleList = [{
       let msg = message.substr(message.indexOf('撤回') + 2).trim();
       try {
         let num = parseInt(msg);
-        let deleteList = GlobalData.oIdList.splice(0, num);
+        let deleteList = IceNet.GLOBAL_MSG_OID.splice(0, num);
         deleteList.forEach(async function (oId) {
+          console.log(oId)
           await fish.chatroom.revoke(oId);
         })
         cb = `撤回完成，共计撤回${num}条消息。`;

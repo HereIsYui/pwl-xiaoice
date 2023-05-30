@@ -164,7 +164,7 @@ export const getTianqi = function (user: string, msg: string, IceNet: any): Prom
             })
             if (tqApi.data.code == 200) {
               msg += "查询的天气来啦 \n > " + tqApi.data.result.content + " \n";
-            }else{
+            } else {
               msg += "查询的天气来啦 \n";
             }
             if (alertInfo.length > 0) {
