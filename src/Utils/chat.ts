@@ -17,19 +17,14 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
   switch (data.type) {
     case 0:
       // 普通消息处理
-      for (let r of GlobalRuleList) {
-        if (r.rule.test(data.msg)) {
-          IceNet.UDetail = data.detail;
-          IceNet.UName = uname;
-          let callback = await r.func(data.user, data.msg, fish, IceNet);
-          if (callback) {
-            IceNet.sendMsg(`@${data.user} \n ${uname} ${callback}`)
-            data.detail.intimacy = data.detail.intimacy + 1;
-            if(data.detail.id){
-              IceNet.user.update(data.detail.id, data.detail)
-            }
-          }
-          break;
+      IceNet.UDetail = data.detail;
+      IceNet.UName = uname;
+      let cb = await GlobalRuleList.find(r => r.rule.test(data.msg)).func(data.user, data.msg, fish, IceNet);
+      if (cb) {
+        IceNet.sendMsg(`@${data.user} \n ${uname} ${cb}`)
+        data.detail.intimacy = data.detail.intimacy + 1;
+        if (data.detail.id) {
+          IceNet.user.update(data.detail.id, data.detail)
         }
       }
       break;
