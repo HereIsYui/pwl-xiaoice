@@ -174,40 +174,6 @@ export const GlobalRuleList = [{
   }
 }]
 
-async function usePoint() {
-  if (GlobalData.pointList.length > 0) {
-    let user = GlobalData.pointList.shift();
-    await startUsePoint(user)
-  }
-}
-
-async function startUsePoint(user: string) {
-  try {
-    await FingerTo(conf.keys.point).editUserPoints(user, -64, "聊天室合议禅定为应急预案,64积分已扣除")
-    usePoint()
-  } catch (e) {
-    LOGGER.Err(`扣除${user}积分失败`, e);
-    return false;
-  }
-}
-
-async function GetXiaoIceMsg(user: string, msg: string, fish: FishPi, IceNet?: any) {
-  let message = msg.replace(/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i, '');
-  message = message.trim();
-  let cb = "";
-  for (let r of XiaoIceRuleList) {
-    if (r.rule.test(message)) {
-      LOGGER.Log(`收到${user}的指令：${message}`, 1)
-      cb = await r.func(user, message, fish, IceNet);
-      break;
-    }
-  }
-  return cb;
-
-}
-
-
-
 const XiaoIceRuleList = [{
   rule: /^\s*$/,
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
@@ -439,62 +405,38 @@ const XiaoIceRuleList = [{
     let cb = "";
     let liveness = 0;
     let isDajie = !message.match('工资');
-    if (IceNet.UDetail.last_liveness == 0) {
-      liveness = await FingerTo(conf.keys.liveness).getYesterDayLivenessReward(user);
-      cb = `小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${liveness >= 0 ? liveness + '点积分:credit_card:' : '0点积分，不要太贪心哦~'}`;
-      let toDaySeed = parseInt((Math.random() * 100).toString());
-      let uBag: UbagItem[] = JSON.parse(IceNet.UDetail.bag);
-      if (toDaySeed <= 40) {
-        cb += `\n 🎉🎉🎉鸿运当头🎉🎉🎉 \n `
-        cb += `嘻嘻,小冰骗你的~小冰什么都没捡到哦`
-        cb += `\n > 发送\`小冰 背包\`可以查看当前背包信息`
-      } else if (toDaySeed > 40 && toDaySeed <= 45) {
-        cb += `\n 🎉🎉🎉鸿运当头🎉🎉🎉 \n `
-        cb += `${IceNet.UName}! ${IceNet.UName}! 小冰捡到了\`免签卡碎片\`一张,已经放入${IceNet.UName}的背包啦~`
-        cb += `\n > 发送\`小冰 背包\`可以查看当前背包信息`
-        if (uBag.length == 0) {
-          uBag.push({ name: "免签卡碎片", num: 1 })
-        } else {
-          let hasItem: boolean = false;
-          uBag.forEach(i => {
-            if (i.name == "免签卡碎片") {
-              i.num += 1;
-              hasItem = true;
-            }
-          });
-          if (!hasItem) {
-            uBag.push({ name: "免签卡碎片", num: 1 })
-          }
-        }
-      } else if (toDaySeed < 70) {
-        cb += `\n ${IceNet.UName}! ${IceNet.UName}! 我在路上看到阿达了,还给我了一张签名照。`;
-        if (uBag.length == 0) {
-          uBag.push({ name: "阿达的签名照", num: 1 })
-        } else {
-          let hasItem: boolean = false;
-          uBag.forEach(i => {
-            if (i.name == "阿达的签名照") {
-              i.num += 1;
-              hasItem = true;
-            }
-          });
-          if (!hasItem) {
-            uBag.push({ name: "阿达的签名照", num: 1 })
-          }
-        }
-      } else {
-        cb += `\n ${IceNet.UName}! ${IceNet.UName}! 凌被妖怪抓走了(╥╯^╰╥) 快v我50去报警`
-      }
-      IceNet.UDetail.bag = JSON.stringify(uBag);
-      IceNet.UDetail.last_liveness = 1;
-      await IceNet.user.update(IceNet.UDetail.id, IceNet.UDetail);
-      let creditUser = await IceNet.credit.find({ where: { user } });
-      if (creditUser.length !== 0) {
-        creditUser[0].liveness_times = (creditUser[0].liveness_times || 0) + 1
-        await IceNet.credit.update(creditUser[0].id, creditUser[0]);
-      }
-    } else {
+    if (IceNet.UDetail.last_liveness == 1) {
       cb = `小冰今天已经${isDajie ? '打劫过' : '领过工资'}啦~ \n > 小冰打劫是领取昨日活跃哦, 让小冰帮你领取有概率获得免签卡碎片~`
+      return cb
+    }
+    liveness = await FingerTo(conf.keys.liveness).getYesterDayLivenessReward(user);
+    if (liveness == 0) {
+      cb = `今日已经领过活跃啦! 不可以重复领取哦 \n > 小冰打劫是领取昨日活跃哦, 让小冰帮你领取有概率获得免签卡碎片~`
+      return cb
+    }
+    cb = `小冰${isDajie ? '打劫回来' : '发工资'}啦！一共获得了${liveness >= 0 ? liveness + '点积分:credit_card:' : '0点积分, 不要太贪心哦~'}`;
+    let toDaySeed = parseInt((Math.random() * 100).toString());
+    if (toDaySeed <= 40) {
+      cb += `\n 🎉🎉🎉鸿运当头🎉🎉🎉 \n `
+      cb += `嘻嘻,小冰骗你的~小冰什么都没捡到哦`
+      cb += `\n > 发送\`小冰 背包\`可以查看当前背包信息`
+    } else if (toDaySeed <= 65) {
+      cb += `\n 🎉🎉🎉鸿运当头🎉🎉🎉 \n `
+      cb += `${IceNet.UName}! ${IceNet.UName}! 小冰捡到了\`免签卡碎片\`一张,已经放入${IceNet.UName}的背包啦~`
+      cb += `\n > 发送\`小冰 背包\`可以查看当前背包信息`
+      await EidtUserBag({ item: "免签卡碎片", num: 1 }, IceNet);
+    } else if (toDaySeed < 90) {
+      cb += `\n ${IceNet.UName}! ${IceNet.UName}! 我在路上看到阿达了,还给我了一张签名照。`;
+      await EidtUserBag({ item: "阿达的签名照", num: 1 }, IceNet);
+    } else {
+      cb += `\n ${IceNet.UName}! ${IceNet.UName}! 凌被妖怪抓走了(╥╯^╰╥) 快v我50去报警`
+    }
+    IceNet.UDetail.last_liveness = 1;
+    await IceNet.user.update(IceNet.UDetail.id, IceNet.UDetail);
+    let creditUser = await IceNet.credit.find({ where: { user } });
+    if (creditUser.length !== 0) {
+      creditUser[0].liveness_times = (creditUser[0].liveness_times || 0) + 1
+      await IceNet.credit.update(creditUser[0].id, creditUser[0]);
     }
     return cb;
   }
@@ -509,7 +451,7 @@ const XiaoIceRuleList = [{
     } else {
       cb += `当前存货:`
       uBag.forEach(i => {
-        cb += `\n \`${i.name}\`*${i.num}个`
+        if (i.num > 0) cb += `\n \`${i.name}\`*${i.num}个`
       });
     }
     return cb;
@@ -519,21 +461,23 @@ const XiaoIceRuleList = [{
   func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
     let cb = '';
     let item = message.split(" ")[1];
-    if (["免签卡"].includes(item)) {
-      let uBag: UbagItem[] = JSON.parse(IceNet.UDetail.bag);
-      if (uBag.length == 0) {
-        cb = `你还没有获得免签卡碎片呢!`
-      } else {
-        uBag.forEach(i => {
-          if (i.name == "免签卡" && i.num >= 3) {
-            cb = `兑换成功, 免签卡将直接到账背包, 请注意查收`
-          } else {
-            cb = `兑换失败, 免签卡碎片不够哦`
-          }
-        });
-      }
-    } else {
-      cb = `啊啊啊 小冰没有这个道具啊`
+    if (!["免签卡", "免签卡碎片"].includes(item)) {
+      return `啊啊啊 小冰没有这个道具啊`
+    }
+    let isOk = null;
+    switch (item) {
+      case "免签卡":
+        isOk = await EidtUserBag({ item: "免签卡碎片", num: -3 }, IceNet);
+        isOk.code == 0 && await FingerTo(conf.keys.item).editUserBag(user, 'checkin1day', 1);
+        cb = isOk.code == 0 ? "兑换成功" : isOk.msg;
+        break;
+      case "免签卡碎片":
+        isOk = await EidtUserBag({ item: "阿达的签名照", num: -3 }, IceNet);
+        isOk.code == 0 && await EidtUserBag({ item: "免签卡碎片", num: 1 }, IceNet);
+        cb = isOk.code == 0 ? "兑换成功" : isOk.msg;
+        break;
+      default:
+        break;
     }
     return cb;
   }
@@ -638,3 +582,65 @@ const XiaoIceRuleList = [{
     return cb;
   }
 }]
+
+async function usePoint() {
+  if (GlobalData.pointList.length > 0) {
+    let user = GlobalData.pointList.shift();
+    await startUsePoint(user)
+  }
+}
+
+async function startUsePoint(user: string) {
+  try {
+    await FingerTo(conf.keys.point).editUserPoints(user, -64, "聊天室合议禅定为应急预案,64积分已扣除")
+    usePoint()
+  } catch (e) {
+    LOGGER.Err(`扣除${user}积分失败`, e);
+    return false;
+  }
+}
+
+async function GetXiaoIceMsg(user: string, msg: string, fish: FishPi, IceNet?: any) {
+  let message = msg.replace(/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i, '');
+  message = message.trim();
+  let cb = "";
+  for (let r of XiaoIceRuleList) {
+    if (r.rule.test(message)) {
+      LOGGER.Log(`收到${user}的指令：${message}`, 1)
+      cb = await r.func(user, message, fish, IceNet);
+      break;
+    }
+  }
+  return cb;
+}
+
+async function EidtUserBag(data: any, IceNet?: any) {
+  let uBag: UbagItem[] = JSON.parse(IceNet.UDetail.bag);
+  let cb = { code: 0, msg: "成功" };
+  if (uBag.length == 0) {
+    if (data.num < 0) {
+      return { code: 1, msg: "你还没有该物品" }
+    }
+    uBag.push({ name: data.item, num: data.num });
+  } else {
+    let hasItem: boolean = false;
+    uBag.forEach(i => {
+      if (i.name == data.item) {
+        hasItem = true;
+        if (i.num + data.num < 0) {
+          cb = { code: 1, msg: "物品数量不足" }
+        } else {
+          i.num += data.num;
+          cb = { code: 0, msg: "成功" }
+        }
+      }
+    });
+    if (!hasItem) {
+      if (data.num < 0) return { code: 1, msg: "你还没有该物品" }
+      uBag.push({ name: data.item, num: data.num })
+    }
+  }
+  IceNet.UDetail.bag = JSON.stringify(uBag);
+  await IceNet.user.update(IceNet.UDetail.id, IceNet.UDetail);
+  return cb
+}

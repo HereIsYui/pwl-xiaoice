@@ -317,7 +317,7 @@ export class AppService {
     return { code: 0, message: 'ok' }
   }
   // 发朋友圈(清风明月)
-  @Cron('0 30 10 * * 1-5')
+  @Cron('0 30 10 * * *')
   async SendPYQMsg() {
     const pyq = await axios({
       method: 'get',

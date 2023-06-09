@@ -19,7 +19,7 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
       // 普通消息处理
       IceNet.UDetail = data.detail;
       IceNet.UName = uname;
-      let cb = await GlobalRuleList.find(r => r.rule.test(data.msg)).func(data.user, data.msg, fish, IceNet);
+      let cb = await GlobalRuleList.find(r => r.rule.test(data.msg))?.func(data.user, data.msg, fish, IceNet);
       if (cb) {
         IceNet.sendMsg(`@${data.user} \n ${uname} ${cb}`)
         data.detail.intimacy = data.detail.intimacy + 1;
