@@ -4,8 +4,11 @@ import * as servestatic from 'serve-static';
 import * as path from 'path'
 import { configInfo as conf } from './Utils/config'
 import { LOGGER } from './Utils/logger'
-import fetch from 'node-fetch'
-globalThis.fetch = fetch as any;
+import fetch, { Headers, Request, Response } from 'node-fetch';
+
+if (!('fetch' in globalThis)) {
+  Object.assign(globalThis, { fetch, Headers, Request, Response })
+}
 
 // 启动项目
 async function bootstrap() {
