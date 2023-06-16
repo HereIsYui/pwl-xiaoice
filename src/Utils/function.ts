@@ -3,7 +3,7 @@ import axios from "axios";
 import { LOGGER } from "./logger";
 import type FishPi from "fishpi";
 import { Like, Repository } from "typeorm";
-import * as Aes from "./xiaoice/Aes";
+import { Aes } from "./xiaoice/Aes";
 
 export const wyydiange = async function (user: string, message: string) {
   let msg = message.substring(message.indexOf("点歌") + 2).trim();
@@ -179,9 +179,8 @@ export const getTianqi = function (
                 let code = items.code.split("");
                 items.code1 = code[0] + code[1];
                 items.code2 = code[2] + code[3];
-                msg += `<img src="https://img.shields.io/badge/-${
-                  levelCode[items.code1]
-                }-${warningCode[items.code2].color}">`;
+                msg += `<img src="https://img.shields.io/badge/-${levelCode[items.code1]
+                  }-${warningCode[items.code2].color}">`;
               });
               msg += " \n ";
             }
@@ -189,33 +188,29 @@ export const getTianqi = function (
               let ndate = new Date(weather[0].date);
               let m = ndate.getMonth() + 1;
               let d = ndate.getDate();
-              let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${
-                weatherCode[0].value
-              }&a=${Math.ceil(weather[0].avg)}`;
+              let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${weatherCode[0].value
+                }&a=${Math.ceil(weather[0].avg)}`;
               msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
             } else if (date == "明天") {
               let ndate = new Date(weather[1].date);
               let m = ndate.getMonth() + 1;
               let d = ndate.getDate();
-              let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${
-                weatherCode[1].value
-              }&a=${Math.ceil(weather[1].avg)}`;
+              let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${weatherCode[1].value
+                }&a=${Math.ceil(weather[1].avg)}`;
               msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
             } else if (date == "后天") {
               let ndate = new Date(weather[2].date);
               let m = ndate.getMonth() + 1;
               let d = ndate.getDate();
-              let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${
-                weatherCode[2].value
-              }&a=${Math.ceil(weather[2].avg)}`;
+              let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${weatherCode[2].value
+                }&a=${Math.ceil(weather[2].avg)}`;
               msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
             } else if (date == "大后天") {
               let ndate = new Date(weather[3].date);
               let m = ndate.getMonth() + 1;
               let d = ndate.getDate();
-              let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${
-                weatherCode[3].value
-              }&a=${Math.ceil(weather[3].avg)}`;
+              let url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${weatherCode[3].value
+                }&a=${Math.ceil(weather[3].avg)}`;
               msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
             } else {
               let date = [];
@@ -235,9 +230,8 @@ export const getTianqi = function (
                 ","
               )}&weatherCode=${weatherCodeList.join(",")}&max=${max.join(
                 ","
-              )}&min=${min.join(",")}&t=${adr}&st=${
-                weatherData.forecast_keypoint
-              }`;
+              )}&min=${min.join(",")}&t=${adr}&st=${weatherData.forecast_keypoint
+                }`;
               msg += `<iframe src="${url}" width="380" height="370" frameborder="0"></iframe> \n`;
             }
             resolve(msg);
