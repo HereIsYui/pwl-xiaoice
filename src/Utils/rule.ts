@@ -714,9 +714,10 @@ const XiaoIceRuleList = [
   {
     rule: /.*/,
     func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
-      if(Math.random()>0.5)
-      return await chatWithXiaoAi(message);
-      else return await chatWithXiaoBing(message);
+      // if(Math.random()>0.5)
+      // return await chatWithXiaoAi(message);
+      // else return await chatWithXiaoBing(message);
+      return await chatWithXiaoBing(message);
     },
   },
 ];
