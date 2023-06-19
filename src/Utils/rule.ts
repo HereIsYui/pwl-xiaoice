@@ -191,7 +191,7 @@ export const GlobalRuleList = [
     },
   },
   {
-    rule: /^小冰/,
+    rule: /^小冰(dev)?/,
     func: async (user: string, msg: string, fish: FishPi, IceNet?: any) => {
       let cb = await GetXiaoIceMsg(user, msg, fish, IceNet);
       return cb;
@@ -713,9 +713,7 @@ const XiaoIceRuleList = [
   {
     rule: /.*/,
     func: async (user: string, message: string, fish: FishPi, IceNet?: any) => {
-      // if(Math.random()>0.5)
-      // return await chatWithXiaoAi(message);
-      // else return await chatWithXiaoBing(message);
+      if (Math.random() > 0.5) return await chatWithXiaoAi(message);
       return await chatWithXiaoBing(message);
     },
   },
@@ -748,7 +746,10 @@ async function GetXiaoIceMsg(
   fish: FishPi,
   IceNet?: any
 ) {
-  let message = msg.replace(/^(小冰|小爱(同学)?|嘿?[，, ]?siri)/i, "");
+  if (msg.startsWith("小冰dev")) {
+    if (!conf.admin.includes(user)) return "你不是管理员, 不能使用dev指令";
+  }
+  let message = msg.replace(/^小冰(dev)?/i, "");
   message = message.trim();
   let cb = "";
   for (let r of XiaoIceRuleList) {

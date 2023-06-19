@@ -3,7 +3,7 @@ import axios from "axios";
 import { LOGGER } from "./logger";
 import type FishPi from "fishpi";
 import { Like, Repository } from "typeorm";
-import { Aes } from "./xiaoice/Aes";
+import Aes from "./xiaoice/Aes";
 
 export const wyydiange = async function (user: string, message: string) {
   let msg = message.substring(message.indexOf("点歌") + 2).trim();
