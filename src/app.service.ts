@@ -15,7 +15,7 @@ import axios from 'axios';
 import * as md5 from 'md5';
 import { Credit } from './entities/credit.entities';
 import * as dayjs from 'dayjs'
-import { ElvesUser } from './Utils/type';
+import { ElvesUser } from './types';
 
 @Injectable()
 export class AppService {
