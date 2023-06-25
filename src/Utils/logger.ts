@@ -1,5 +1,5 @@
-import Colors from 'colors.ts'
-import dayjs from 'dayjs'
+import Colors = require('colors.ts');
+import * as dayjs from 'dayjs'
 Colors.enable()
 
 export const LOGGER = {

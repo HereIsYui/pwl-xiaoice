@@ -23,7 +23,7 @@ export const GlobalRuleList = [
     rule: /^点歌/,
     func: async ({ user, msg, fish, IceNet }: RuleParams) => {
       let cb = "\n > 滴~ 你点的歌来了 ";
-      cb += await music163({msg});
+      cb += await music163({ msg });
       return cb;
     },
   },

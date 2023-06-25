@@ -1,8 +1,8 @@
 import { FingerTo } from 'fishpi'
 import { editUserBag } from './bag'
-import dayjs from 'dayjs'
+import * as dayjs from 'dayjs'
 import { Bank } from 'src/entities/bank.entities'
-import { BankRecords } from 'src/entities/bankRecord.entities'
+import { BankRecords } from 'src/entities/bankrecord.entities'
 import { type RuleParams } from 'src/types'
 
 export const bankRuleList = [

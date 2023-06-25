@@ -1,8 +1,8 @@
 import type FishPi from 'fishpi'
 import type { ChatMsg } from '../types'
 import { GlobalRuleList } from './rule'
-import dayjs from 'dayjs'
-import { BankRecords } from 'src/entities/bankRecord.entities'
+import * as dayjs from 'dayjs'
+import { BankRecords } from '../entities/bankrecord.entities';
 import { Bank } from 'src/entities/bank.entities'
 import { configInfo as conf, writeConfig } from '../Utils/config'
 
