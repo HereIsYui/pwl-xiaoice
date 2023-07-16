@@ -69,8 +69,16 @@ export const EmptyCall = function (user: string) {
   ]);
 };
 
-export const GetXiaoIceGameRank = function () {
-  return "功能调整中";
+export const GetXiaoIceGameRank = async function () {
+  try {
+    const res = await axios({
+      method: "get",
+      url: `https://pwl.yuis.cc/GetRank`,
+    });
+    return res.data.data;
+  } catch (error) {
+    return "功能调整中";
+  }
 };
 
 export const getActivutyRanking = function (tag: string) {
