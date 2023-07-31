@@ -8,12 +8,19 @@ export const music163 = async function ({ msg }: { msg: string }) {
   msg = encodeURI(msg.replace(/^点歌/, "").trim());
   try {
     const res = await axios({
-      method: "get",
-      url: `https://service-gkae1468-1256708847.gz.apigw.tencentcs.com/release/search?keywords=${msg}&limit=1`,
-    });
-    const mid = res.data.result.songs[0].id;
-    const cb = `\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=66"></iframe>`;
-    return cb;
+      method: 'POST',
+      headers: {
+          Host: 'music.163.com',
+          Origin: 'http://music.163.com',
+          'user-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          referer: 'http://music.163.com/search/',
+      },
+      url: `http://music.163.com/api/search/get/web?csrf_token&hlpretag&hlposttag&s=${msg}&type=1&offset=0&total=true&limit=1`,
+  });
+  let mid = res.data.result.songs[0].id;
+  let cb = `>滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=66"></iframe>`
+  return cb;
   } catch (error) {
     LOGGER.Err(JSON.stringify(error), 0);
     return "你丫的这首歌太难找了!换一个!";
