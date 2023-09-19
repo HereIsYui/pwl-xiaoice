@@ -35,5 +35,6 @@ export interface RuleParams {
   fish: FishPi
   conf: any
   IceNet?: any
-  msg: string
+  msg: string,
+  data?: ChatMsg
 }

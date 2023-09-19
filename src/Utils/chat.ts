@@ -39,7 +39,8 @@ export const ChatCallBack = async function (
         msg: data.msg,
         fish,
         IceNet,
-        conf
+        conf,
+        data
       })
       if (cb) {
         IceNet.sendMsg(`@${data.user} \n ${uname} ${cb}`)
