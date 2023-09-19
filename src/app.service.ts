@@ -16,6 +16,7 @@ import * as md5 from 'md5';
 import { Credit } from './entities/credit.entities';
 import * as dayjs from 'dayjs'
 import { ElvesUser } from './types';
+import { ActivityRecordEntity } from './entities/activity.entities';
 
 @Injectable()
 export class AppService {
@@ -29,7 +30,9 @@ export class AppService {
     @InjectRepository(Client) private readonly client: Repository<Client>,
     @InjectRepository(Bank) private readonly bank: Repository<Bank>,
     @InjectRepository(BankRecords) private readonly bankRecords: Repository<BankRecords>,
-    @InjectRepository(Credit) private readonly credit: Repository<Credit>) {
+    @InjectRepository(Credit) private readonly credit: Repository<Credit>,
+    @InjectRepository(ActivityRecordEntity) private readonly activityRecord: Repository<ActivityRecordEntity>,
+    ) {
     this.apiKey = conf.fishpi.apiKey;
     this.GLOBAL_MSG_OID = [];
   }
@@ -291,9 +294,6 @@ export class AppService {
     let uInfo = await this.user.find({ where: { uId: data.uId } });
     let nUser = null;
     let intimacy = (data.item == "鱼丸" ? 1 : 10) * parseInt(data.num);
-    if (parseInt(data.num) <= 0) {
-      intimacy = -10
-    }
     if (uInfo.length == 0) {
       nUser = new User();
       nUser.user = data.user;

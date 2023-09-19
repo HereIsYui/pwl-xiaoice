@@ -15,10 +15,12 @@ import { bagRuleList } from "./xiaoIceLib/bag";
 import { gameRuleList } from "./xiaoIceLib/game";
 import { adminRuleList } from "./xiaoIceLib/admin";
 import { wordRuleList } from "./xiaoIceLib/words";
+import { activityRuleList } from "./xiaoIceLib/activity";
 
 export const GlobalRuleList = [
   ...adminRuleList,
   ...gameRuleList,
+  ...activityRuleList,
   {
     rule: /^点歌/,
     func: async ({ user, msg, fish, IceNet }: RuleParams) => {
