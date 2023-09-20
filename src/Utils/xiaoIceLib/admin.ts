@@ -38,7 +38,7 @@ export const adminRuleList = [
   {
     rule: /^微信群$/,
     func: async () => {
-      const cb = '![微信群](https://fishpi.yuis.cc/fishpi.png)'
+      const cb = '![微信群](https://fishpi.yuis.cc/file/fishpi.png)'
       return cb
     }
   }
