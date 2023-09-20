@@ -13,7 +13,7 @@ if (!('fetch' in globalThis)) {
 // 启动项目
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use('/file', servestatic(path.join(__dirname, '../public')));
+  app.use('/file', servestatic(path.join(__dirname, '/public')));
   await app.listen(conf.system.port);
 
   LOGGER.Succ('IceNet is Online, Port:' + conf.system.port, 0);

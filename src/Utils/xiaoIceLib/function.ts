@@ -264,7 +264,7 @@ export const getTianqi = async function (
               const ndate = new Date(weather[0].date);
               const m = ndate.getMonth() + 1;
               const d = ndate.getDate();
-              const url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${
+              const url = `https://fishpi.yuis.cc/file/card/index.html?m=${m}&d=${d}&w=${
                 weatherCode[0].value
               }&a=${Math.ceil(weather[0].avg)}`;
               msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
@@ -272,7 +272,7 @@ export const getTianqi = async function (
               const ndate = new Date(weather[1].date);
               const m = ndate.getMonth() + 1;
               const d = ndate.getDate();
-              const url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${
+              const url = `https://fishpi.yuis.cc/file/card/index.html?m=${m}&d=${d}&w=${
                 weatherCode[1].value
               }&a=${Math.ceil(weather[1].avg)}`;
               msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
@@ -280,7 +280,7 @@ export const getTianqi = async function (
               const ndate = new Date(weather[2].date);
               const m = ndate.getMonth() + 1;
               const d = ndate.getDate();
-              const url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${
+              const url = `https://fishpi.yuis.cc/file/card/index.html?m=${m}&d=${d}&w=${
                 weatherCode[2].value
               }&a=${Math.ceil(weather[2].avg)}`;
               msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
@@ -288,7 +288,7 @@ export const getTianqi = async function (
               const ndate = new Date(weather[3].date);
               const m = ndate.getMonth() + 1;
               const d = ndate.getDate();
-              const url = `https://www.lingmx.com/card/index.html?m=${m}&d=${d}&w=${
+              const url = `https://fishpi.yuis.cc/file/card/index.html?m=${m}&d=${d}&w=${
                 weatherCode[3].value
               }&a=${Math.ceil(weather[3].avg)}`;
               msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
@@ -306,7 +306,7 @@ export const getTianqi = async function (
                 max.push(weather[i].max);
                 min.push(weather[i].min);
               }
-              const url = `https://www.lingmx.com/card/index2.html?date=${date.join(
+              const url = `https://fishpi.yuis.cc/file/card/index2.html?date=${date.join(
                 ","
               )}&weatherCode=${weatherCodeList.join(",")}&max=${max.join(
                 ","
