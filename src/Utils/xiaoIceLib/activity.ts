@@ -6,23 +6,26 @@ import FishPi, { FingerTo } from "fishpi";
 
 export const activityRuleList = [
   {
-    rule: /摸鱼派祝大家国庆快乐/,
+    rule: /[\u4E00-\u9FA5]{1,20}(国庆).{0,10}(快乐)/,
     func: async ({ data, IceNet, conf, fish }: RuleParams) => {
-      let cb = await activityReward(data, IceNet, 1, 7, conf, fish);
+      let RandomDay = randomNum(2, 6);
+      let cb = await activityReward(data, IceNet, 1, 8 + RandomDay, conf, fish);
       return cb;
     },
   },
   {
-    rule: /摸鱼派祝大家中秋快乐/,
+    rule: /[\u4E00-\u9FA5]{1,20}(中秋).{0,10}(快乐)/,
     func: async ({ data, IceNet, conf, fish }: RuleParams) => {
-      let cb = await activityReward(data, IceNet, 1, 3, conf, fish);
+      let RandomDay = randomNum(1, 3);
+      let cb = await activityReward(data, IceNet, 1, 8 + RandomDay, conf, fish);
       return cb;
     },
   },
   {
-    rule: /摸鱼派祝大家欢庆双节/,
+    rule: /欢庆双节/,
     func: async ({ data, IceNet, conf, fish }: RuleParams) => {
-      let cb = await activityReward(data, IceNet, 1, 8, conf, fish);
+      let RandomDay = randomNum(2, 6);
+      let cb = await activityReward(data, IceNet, 1, 10 + RandomDay, conf, fish);
       return cb;
     },
   },
@@ -37,10 +40,13 @@ async function activityReward(
   fish: any
 ) {
   let cb = ``;
-  if (dayjs().isBefore("2023-09-27")) {
-    cb = "活动还没有开始哦~";
+  if (dayjs().isBefore("2023-09-26") || dayjs().isAfter("2023-10-06")) {
+    cb = "活动未开始或已结束~";
     return cb;
   }
+  // 先撤回口令
+  await fish.chatroom.revoke(data.oId);
+
   // 判断是否已经领取过
   let Auser = await IceNet.activityRecord.findOne({
     where: { userId: IceNet.UDetail.uId },
@@ -63,8 +69,13 @@ async function activityReward(
   activity_record.name = data.user;
   activity_record.content = data.msg;
   IceNet.activityRecord.save(activity_record);
-  await fish.chatroom.revoke(data.oId);
+  console.log('day:' + day);
   FingerTo(conf.keys.item).editUserBag(data.user, "sysCheckinRemain", day);
   cb = `:tada:恭喜触发\`关键词${activityId}\` 奖励已到账,可在账户中查看~`;
   return cb;
+}
+
+// 根据传入的最大值最小值生成随机数
+function randomNum(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
