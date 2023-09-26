@@ -49,7 +49,7 @@ async function activityReward(
 
   // 判断是否已经领取过
   let Auser = await IceNet.activityRecord.findOne({
-    where: { userId: IceNet.UDetail.uId },
+    where: { userId: data.uId },
   });
   if (Auser) {
     cb = `:jack_o_lantern:已经领取过啦,不可以重复领取哦`;
@@ -64,7 +64,7 @@ async function activityReward(
   }
 
   let activity_record = new ActivityRecordEntity();
-  activity_record.userId = IceNet.UDetail.uId;
+  activity_record.userId = data.uId;
   activity_record.activityName = "2023国庆活动";
   activity_record.name = data.user;
   activity_record.content = data.msg;
