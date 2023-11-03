@@ -16,7 +16,8 @@
     "keys": {
         "point": "",
         "liveness": "",
-        "elves": ""
+        "elves": "",
+        "item":""
     },
     "database": {
         "host": "",
