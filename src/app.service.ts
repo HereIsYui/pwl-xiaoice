@@ -85,28 +85,7 @@ export class AppService {
     this.fish.chatroom.addListener(async ({ msg }) => {
       // 处理消息
       let ChatMsgData = msg.data as ChatMsg;
-      let BarragerMsgData = msg.data as BarragerMsg;
       let user = ChatMsgData?.userName;
-      if ((msg.type == 'barrager' || msg.type == 'msg') && user == 'xiong') {
-        let msginfo = msg.type == 'barrager' ? BarragerMsgData.barragerContent : ChatMsgData.md;
-        if (/(xiàmù|我).{0,10}(是帅哥|帅哥|帅)/.test(msginfo)) {
-          let xiongInfo = await this.fish.user('xiong');
-          let xiongPoint = xiongInfo.userPoint;
-          if (xiongPoint >= 250) {
-            await FingerTo(conf.keys.point).editUserPoints(user, -250, "聊天室造谣,250积分已扣除")
-            if (msg.type == 'msg') {
-              await this.fish.chatroom.revoke(ChatMsgData.oId);
-            }
-            this.sendMsg(`@${user} 聊天室造谣,250积分已扣除`)
-          } else {
-            if (msg.type == 'msg') {
-              await this.fish.chatroom.revoke(ChatMsgData.oId);
-            }
-            this.sendMsg(`@${user} 啧啧啧,你看看你 250积分都没有 还造谣`);
-          }
-          return;
-        }
-      }
       if (msg.type == 'redPacket' && (ChatMsgData.content as RedPacket).recivers.includes(conf.fishpi.nameOrEmail)) {
         // 只处理机器人专属红包
         let packet = await this.fish.chatroom.redpacket.open(ChatMsgData.oId);
