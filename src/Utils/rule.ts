@@ -1,12 +1,4 @@
-import {
-  music163,
-  EmptyCall,
-  GetXiaoIceGameRank,
-  getActivutyRanking,
-  chatWithXiaoAi,
-  chatWithXiaoBing,
-  getTianqi,
-} from "./xiaoIceLib/function";
+import { music163, EmptyCall, GetXiaoIceGameRank, getActivutyRanking, chatWithXiaoAi, chatWithXiaoBing, getTianqi } from "./xiaoIceLib/function";
 import type FishPi from "fishpi";
 import { LOGGER } from "./logger";
 import { type RuleParams } from "../types";
@@ -32,10 +24,10 @@ export const GlobalRuleList = [
   {
     rule: /(56c0f695|乌拉)/,
     func: async ({ user, msg, fish, IceNet }: RuleParams) => {
-      const cb = "";
-      // if (user != 'sevenSummer') {
-      //   cb = "![乌拉乌拉](https://pwl.stackoverflow.wiki/2022/03/image-56c0f695.png)";
-      // }
+      let cb = "";
+      if (user != "sevenSummer") {
+        cb = "![乌拉乌拉](https://pwl.stackoverflow.wiki/2022/03/image-56c0f695.png)";
+      }
       return cb;
     },
   },
@@ -43,10 +35,8 @@ export const GlobalRuleList = [
     rule: /^TTS|^朗读/i,
     func: async ({ user, msg, fish, IceNet }: RuleParams) => {
       const link =
-        Buffer.from(
-          "aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==",
-          "base64"
-        ) + encodeURIComponent(msg.replace(/^TTS|^朗读/i, ""));
+        Buffer.from("aHR0cHM6Ly9kaWN0LnlvdWRhby5jb20vZGljdHZvaWNlP2xlPXpoJmF1ZGlvPQ==", "base64") +
+        encodeURIComponent(msg.replace(/^TTS|^朗读/i, ""));
       const cb = `那你可就听好了<br><audio src='${link}' controls/>`;
       return cb;
     },
@@ -77,8 +67,7 @@ const XiaoIceRuleList = [
   {
     rule: /^(菜单|功能)(列表)?$/,
     func: async ({ user, msg, fish, IceNet, conf }: RuleParams) => {
-      const cb =
-        "功能列表:\n	1. 直接发短语即可聊天。\n2. 全局发送[TTS+文本]或[朗读+文本]即可朗读(无需关键词)\n3. 回复[xxx天气]可以查询天气";
+      const cb = "功能列表:\n	1. 直接发短语即可聊天。\n2. 全局发送[TTS+文本]或[朗读+文本]即可朗读(无需关键词)\n3. 回复[xxx天气]可以查询天气";
       return cb;
     },
   },
@@ -98,14 +87,8 @@ const XiaoIceRuleList = [
         cb = `${IceNet.UName},咱俩的关系还没到称呼\`${uwantName}\`的时候哦:angry: \n > 注意 首次命名免费, 之后每次改名消耗50亲密度`;
       } else {
         uwantName = uwantName.substring(0, 5);
-        uwantName = uwantName.replace(
-          /[`~!@#$^\-&*()=|{}':;',\\\[\]\.<>\/?~！@#￥……&*（）——|{}【】'；：""'。，、？\s]/g,
-          ""
-        );
-        uwantName = uwantName.replace(
-          /(Yui|爸|爷|爹|dad|天道|阿达|ba|主|祖|妈|爺|媽|輝|辉|逼|b)/gi,
-          ""
-        );
+        uwantName = uwantName.replace(/[`~!@#$^\-&*()=|{}':;',\\\[\]\.<>\/?~！@#￥……&*（）——|{}【】'；：""'。，、？\s]/g, "");
+        uwantName = uwantName.replace(/(Yui|爸|爷|爹|dad|天道|阿达|ba|主|祖|妈|爺|媽|輝|辉|逼|b)/gi, "");
         if (IceNet.UDetail.user == "xiong" && uwantName.includes("帅哥")) {
           uwantName = "衰哥";
         }
@@ -134,11 +117,7 @@ const XiaoIceRuleList = [
       const Info = await IceNet.credit.find({ where: { user } });
       let cb = "";
       if (Info.length !== 0) {
-        const IceScore =
-          Info[0].base_score +
-          Info[0].activity_score +
-          Info[0].reward_score +
-          Info[0].credit_score;
+        const IceScore = Info[0].base_score + Info[0].activity_score + Info[0].reward_score + Info[0].credit_score;
         cb = `当前信用分为: ${IceScore}:star2:
  - 基础分: ${Info[0].base_score} '分值构成: 注册时长最高+120分, 小冰亲密度最高+80分'
  - 活跃分: ${Info[0].activity_score} '分值构成: 本周周跃情况最高+200分'
@@ -223,19 +202,13 @@ const XiaoIceRuleList = [
   {
     rule: /.*/,
     func: async ({ user, msg, fish, IceNet, conf }: RuleParams) => {
-      if (Math.random() > 0.5) return await chatWithXiaoAi(msg);
+      //if (Math.random() > 0.5) return await chatWithXiaoAi(msg);
       return await chatWithXiaoBing(msg);
     },
   },
 ];
 
-async function GetXiaoIceMsg(
-  user: string,
-  msg: string,
-  fish: FishPi,
-  IceNet?: any,
-  conf?: any
-) {
+async function GetXiaoIceMsg(user: string, msg: string, fish: FishPi, IceNet?: any, conf?: any) {
   if (msg.startsWith("小冰dev")) {
     if (!conf.admin.includes(user)) return "你不是管理员, 不能使用dev指令";
   }
