@@ -2,6 +2,7 @@ import * as dayjs from "dayjs";
 import { type RuleParams } from "src/types";
 import { LOGGER } from "../logger";
 import { setAdmin } from "./function";
+import axios from "axios";
 
 export const adminRuleList = [
   {
@@ -39,6 +40,42 @@ export const adminRuleList = [
     rule: /^微信群$/,
     func: async () => {
       const cb = "它消失了";
+      return cb;
+    },
+  },
+  {
+    rule: /冰启凌/,
+    func: async ({ user, msg, conf }: RuleParams) => {
+      let cb = "";
+      if (conf.admin.includes(user)) {
+        axios({
+          url: "https://chat.elves.online/super/reload",
+          method: "post",
+          headers: { "Content-Type": "application/json" },
+          data: { s: conf.robot.sevenSummer },
+        });
+        cb = "咦,凌不见了?我去找找~";
+      } else {
+        cb = "亲,这是管理的专属权限哦";
+      }
+      return cb;
+    },
+  },
+  {
+    rule: /冰启鸽/,
+    func: async ({ user, msg, conf }: RuleParams) => {
+      let cb = "";
+      if (conf.admin.includes(user)) {
+        axios({
+          url: "https://red.iwpz.net/restart",
+          method: "post",
+          headers: { "Content-Type": "application/json" },
+          data: { s: conf.robot.b },
+        });
+        cb = "已经按了鸽鸽的开机键了~";
+      } else {
+        cb = "亲,这是管理的专属权限哦";
+      }
       return cb;
     },
   },

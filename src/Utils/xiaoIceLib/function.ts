@@ -89,21 +89,19 @@ export const getActivutyRanking = function (tag: string) {
   return "功能调整中";
 };
 
-export const chatWithXiaoAi = async function (message: string) {
-  try {
-    const res = await axios({
-      method: "get",
-      url: `http://81.70.100.130/api/xiaoai.php?msg=${encodeURI(message)}&n=text`,
-    });
-    return res.data;
-  } catch (error) {
-    return "新小爱的接口似乎出问题了？不是很懂=_=";
-  }
-};
-
 export const chatWithXiaoBing = async function (msg: string) {
   try {
-    return "对话大模型维护中...";
+    const res = await axios({
+      method: "post",
+      url: `https://open-ai.yuis.cc/chat/yui`,
+      data: {
+        content: msg,
+      },
+    });
+    if (res.data.code == 0) {
+      return res.data.data;
+    }
+    return "对话大模型维护出了什么问题~";
   } catch (error) {
     return "新小冰的接口似乎出问题了？不是很懂=_=";
   }

@@ -1,4 +1,4 @@
-import { music163, EmptyCall, GetXiaoIceGameRank, getActivutyRanking, chatWithXiaoAi, chatWithXiaoBing, getTianqi } from "./xiaoIceLib/function";
+import { music163, EmptyCall, GetXiaoIceGameRank, getActivutyRanking, chatWithXiaoBing, getTianqi } from "./xiaoIceLib/function";
 import type FishPi from "fishpi";
 import { LOGGER } from "./logger";
 import { type RuleParams } from "../types";

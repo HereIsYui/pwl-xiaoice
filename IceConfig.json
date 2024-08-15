@@ -1,40 +1,41 @@
 {
-    "system": {
-        "port": 3010
-    },
-    "fishpi": {
-        "nameOrEmail": "",
-        "userPassword": "",
-        "apiKey": ""
-    },
-    "rob": {
-        "is18": true,
-        "working": true,
-        "enableSaohua": true,
-        "lspWaitingTime": 1
-    },
-    "keys": {
-        "point": "",
-        "liveness": "",
-        "elves": "",
-        "item":""
-    },
-    "database": {
-        "host": "",
-        "user": "",
-        "password": "",
-        "database": "",
-        "port": 3306
-    },
-    "admin": [
-        "Yui",
-        "taozhiyu"
-    ],
-    "weather": {
-        "key": "",
-        "tianApi": ""
-    },
-    "chatroom": {
-        "timeout": 10
-    }
+  "system": {
+    "port": 3010
+  },
+  "fishpi": {
+    "nameOrEmail": "",
+    "userPassword": "",
+    "apiKey": ""
+  },
+  "rob": {
+    "is18": true,
+    "working": true,
+    "enableSaohua": true,
+    "lspWaitingTime": 1
+  },
+  "keys": {
+    "point": "",
+    "liveness": "",
+    "elves": "",
+    "item": ""
+  },
+  "database": {
+    "host": "",
+    "user": "",
+    "password": "",
+    "database": "",
+    "port": 3306
+  },
+  "admin": ["Yui", "taozhiyu"],
+  "weather": {
+    "key": "",
+    "tianApi": ""
+  },
+  "chatroom": {
+    "timeout": 10
+  },
+  "robot": {
+    "b": "",
+    "sevenSummer": ""
+  }
 }
