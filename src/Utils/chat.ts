@@ -20,14 +20,19 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
       // 普通消息处理
       IceNet.UDetail = data.detail;
       IceNet.UName = uname;
-      const cb = await GlobalRuleList.find((r) => r.rule.test(data.msg))?.func({
-        user: data.user,
-        msg: data.msg,
-        fish,
-        IceNet,
-        conf,
-        data,
-      });
+      let cb: any = "";
+      if (data.detail.intimacy < 0 && data.msg.indexOf("小冰") == 0) {
+        cb = "小冰不想搭理你,并向你嘴巴里塞了个冰块🧊 \n\n > 亲密度过低警告";
+      } else {
+        cb = await GlobalRuleList.find((r) => r.rule.test(data.msg))?.func({
+          user: data.user,
+          msg: data.msg,
+          fish,
+          IceNet,
+          conf,
+          data,
+        });
+      }
       if (cb) {
         IceNet.sendMsg(`@${data.user} \n ${uname} ${cb}`);
         data.detail.intimacy = data.detail.intimacy + 1;

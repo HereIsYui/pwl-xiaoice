@@ -8,39 +8,16 @@ export const activityRuleList = [
   {
     rule: /[\u4E00-\u9FA5]{1,20}(国庆).{0,10}(快乐)/,
     func: async ({ data, IceNet, conf, fish }: RuleParams) => {
-      let RandomDay = randomNum(2, 6);
-      let cb = await activityReward(data, IceNet, 1, 8 + RandomDay, conf, fish);
-      return cb;
-    },
-  },
-  {
-    rule: /[\u4E00-\u9FA5]{1,20}(中秋).{0,10}(快乐)/,
-    func: async ({ data, IceNet, conf, fish }: RuleParams) => {
-      let RandomDay = randomNum(1, 3);
-      let cb = await activityReward(data, IceNet, 1, 8 + RandomDay, conf, fish);
-      return cb;
-    },
-  },
-  {
-    rule: /欢庆双节/,
-    func: async ({ data, IceNet, conf, fish }: RuleParams) => {
-      let RandomDay = randomNum(2, 6);
-      let cb = await activityReward(data, IceNet, 1, 10 + RandomDay, conf, fish);
+      let RandomDay = randomNum(2, 4);
+      let cb = await activityReward(data, IceNet, 1, 6 + RandomDay, conf, fish);
       return cb;
     },
   },
 ];
 
-async function activityReward(
-  data: ChatMsg,
-  IceNet: any,
-  activityId: number,
-  day: number,
-  conf: any,
-  fish: any
-) {
+async function activityReward(data: ChatMsg, IceNet: any, activityId: number, day: number, conf: any, fish: any) {
   let cb = ``;
-  if (dayjs().isBefore("2023-09-26") || dayjs().isAfter("2023-10-06")) {
+  if (dayjs().isBefore("2024-09-27") || dayjs().isAfter("2024-10-07")) {
     cb = "活动未开始或已结束~";
     return cb;
   }
@@ -65,13 +42,13 @@ async function activityReward(
 
   let activity_record = new ActivityRecordEntity();
   activity_record.userId = data.uId;
-  activity_record.activityName = "2023国庆活动";
+  activity_record.activityName = "2024国庆活动";
   activity_record.name = data.user;
   activity_record.content = data.msg;
   IceNet.activityRecord.save(activity_record);
-  console.log('day:' + day);
+  console.log("day:" + day);
   FingerTo(conf.keys.item).editUserBag(data.user, "sysCheckinRemain", day);
-  cb = `:tada:恭喜触发\`关键词${activityId}\` 奖励已到账,可在账户中查看~`;
+  cb = `:tada:恭喜触发 \`关键词${activityId}\` 奖励 \`${day}\` 天免签已到账,可在账户中查看~`;
   return cb;
 }
 
