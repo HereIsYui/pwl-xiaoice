@@ -18,7 +18,17 @@ export const music163 = async function ({ msg }: { msg: string }) {
       url: `http://music.163.com/api/search/get/web?csrf_token&hlpretag&hlposttag&s=${msg}&type=1&offset=0&total=true&limit=1`,
     });
     let mid = res.data.result.songs[0].id;
-    let cb = `>滴~ 你点的歌来了 \n\n<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=${mid}&auto=0&height=66"></iframe>`;
+    const info = await axios({
+      method: "GET",
+      headers: {
+        Host: "music.163.com",
+        Origin: "http://music.163.com",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+        referer: "http://music.163.com/search/",
+      },
+      url: `http://music.163.com/api/song/detail/?id=${mid}&ids=%5B${mid}%5D`,
+    });
+    let cb = `[music]{"title": "${info.data.songs[0].name}", "coverURL": "${info.data.songs[0].album.picUrl}", "source": "http://music.163.com/song/media/outer/url?id=${mid}","type":"music","from":""}[/music]`;
     return cb;
   } catch (error) {
     LOGGER.Err(JSON.stringify(error), 0);
@@ -140,128 +150,23 @@ export const getTianqi = async function (user: string, msg: string, IceNet: any)
             const weatherData = res.data.result;
             const weather = weatherData.daily.temperature;
             const weatherCode = weatherData.daily.skycon;
-            const alertInfo = weatherData.alert.content;
-            const levelCode = {
-              "01": "台风",
-              "02": "暴雨",
-              "03": "暴雪",
-              "04": "寒潮",
-              "05": "大风",
-              "06": "沙尘暴",
-              "07": "高温",
-              "08": "干旱",
-              "09": "雷电",
-              10: "冰雹",
-              11: "霜冻",
-              12: "大雾",
-              13: "霾",
-              14: "道路结冰",
-              15: "森林火灾",
-              16: "雷雨大风",
-            };
-            const warningCode = {
-              "01": {
-                name: "蓝色",
-                color: "blue",
-              },
-              "02": {
-                name: "黄色",
-                color: "yellow",
-              },
-              "03": {
-                name: "橙色",
-                color: "orange",
-              },
-              "04": {
-                name: "红色",
-                color: "red",
-              },
-            };
-            const CodeMap = {
-              CLEAR_DAY: 9,
-              CLEAR_NIGHT: 9,
-              PARTLY_CLOUDY_DAY: 2,
-              PARTLY_CLOUDY_NIGHT: 2,
-              CLOUDY: 10,
-              LIGHT_HAZE: 7,
-              MODERATE_HAZE: 7,
-              HEAVY_HAZE: 7,
-              LIGHT_RAIN: 3,
-              MODERATE_RAIN: 3,
-              HEAVY_RAIN: 3,
-              STORM_RAIN: 3,
-              FOG: 7,
-              LIGHT_SNOW: 4,
-              MODERATE_SNOW: 4,
-              HEAVY_SNOW: 4,
-              STORM_SNOW: 4,
-              DUST: 9,
-              SAND: 9,
-              WIND: 1,
-            };
             let msg = "";
-            const tqtype = CodeMap[weatherCode[0].value];
-            const tqApi = await axios({
-              method: "get",
-              url: `https://apis.tianapi.com/tianqishiju/index?key=${conf.weather.tianApi}&tqtype=${tqtype}`,
-            });
-            if (tqApi.data.code == 200) {
-              msg += "查询的天气来啦 \n > " + tqApi.data.result.content + " \n";
-            } else {
-              msg += "查询的天气来啦 \n";
+            const date = [];
+            const weatherCodeList = [];
+            const max = [];
+            const min = [];
+            for (let i = 0; i < 5; i++) {
+              const ndate = new Date(weather[i].date);
+              const m = ndate.getMonth() + 1;
+              const d = ndate.getDate();
+              date.push(`${m}/${d}`);
+              weatherCodeList.push(weatherCode[i].value);
+              max.push(weather[i].max);
+              min.push(weather[i].min);
             }
-            if (alertInfo.length > 0) {
-              alertInfo.forEach((items) => {
-                const code = items.code.split("");
-                items.code1 = code[0] + code[1];
-                items.code2 = code[2] + code[3];
-                msg += `<img src="https://img.shields.io/badge/-${levelCode[items.code1]}-${warningCode[items.code2].color}">`;
-              });
-              msg += " \n ";
-            }
-            if (date == "今天") {
-              const ndate = new Date(weather[0].date);
-              const m = ndate.getMonth() + 1;
-              const d = ndate.getDate();
-              const url = `https://fishpi.yuis.cc/file/card/index.html?m=${m}&d=${d}&w=${weatherCode[0].value}&a=${Math.ceil(weather[0].avg)}`;
-              msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
-            } else if (date == "明天") {
-              const ndate = new Date(weather[1].date);
-              const m = ndate.getMonth() + 1;
-              const d = ndate.getDate();
-              const url = `https://fishpi.yuis.cc/file/card/index.html?m=${m}&d=${d}&w=${weatherCode[1].value}&a=${Math.ceil(weather[1].avg)}`;
-              msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
-            } else if (date == "后天") {
-              const ndate = new Date(weather[2].date);
-              const m = ndate.getMonth() + 1;
-              const d = ndate.getDate();
-              const url = `https://fishpi.yuis.cc/file/card/index.html?m=${m}&d=${d}&w=${weatherCode[2].value}&a=${Math.ceil(weather[2].avg)}`;
-              msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
-            } else if (date == "大后天") {
-              const ndate = new Date(weather[3].date);
-              const m = ndate.getMonth() + 1;
-              const d = ndate.getDate();
-              const url = `https://fishpi.yuis.cc/file/card/index.html?m=${m}&d=${d}&w=${weatherCode[3].value}&a=${Math.ceil(weather[3].avg)}`;
-              msg += `<iframe src="${url}" width="250" height="320" frameborder="0"></iframe> \n`;
-            } else {
-              const date = [];
-              const weatherCodeList = [];
-              const max = [];
-              const min = [];
-              for (let i = 0; i < 5; i++) {
-                const ndate = new Date(weather[i].date);
-                const m = ndate.getMonth() + 1;
-                const d = ndate.getDate();
-                date.push(`${m}/${d}`);
-                weatherCodeList.push(weatherCode[i].value);
-                max.push(weather[i].max);
-                min.push(weather[i].min);
-              }
-              const url = `https://fishpi.yuis.cc/file/card/index2.html?date=${date.join(",")}&weatherCode=${weatherCodeList.join(
-                ","
-              )}&max=${max.join(",")}&min=${min.join(",")}&t=${adr}&st=${weatherData.forecast_keypoint}`;
-              msg += `<iframe src="${url}" width="380" height="370" frameborder="0"></iframe> \n`;
-            }
+            msg = `[weather]{"type":"weather","date":"${date.join(",")}","weatherCode":"${weatherCodeList.join(",")}","max":"${max.join(
+              ","
+            )}","min":"${min.join(",")}","t":"${adr}","st":"${weatherData.forecast_keypoint}"}[/weather]`;
             resolve(msg);
           } catch (e) {
             LOGGER.Log("查询天气异常：" + JSON.stringify(e), 0);

@@ -55,7 +55,6 @@ export class AppService {
     }
   }
   sendMsg(msg: string) {
-    msg = msg + `\n\n <span class='IceNet-${new Date().getTime()}'></span>`;
     this.fish.chatroom.send(msg);
   }
   async reloadIce() {

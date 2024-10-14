@@ -34,8 +34,15 @@ export const ChatCallBack = async function (fish: FishPi, data: ChatMsg, IceNet?
         });
       }
       if (cb) {
-        IceNet.sendMsg(`@${data.user} \n ${uname} ${cb}`);
-        data.detail.intimacy = data.detail.intimacy + 1;
+        if (cb.indexOf("[weather]") >= 0) {
+          IceNet.sendMsg(cb);
+        } else {
+          cb = cb + `\n\n <span class='IceNet-${new Date().getTime()}'></span>`;
+          IceNet.sendMsg(`@${data.user} \n ${uname} ${cb}`);
+        }
+        if (data.detail.intimacy >= 0) {
+          data.detail.intimacy = data.detail.intimacy + 1;
+        }
         if (data.detail.id) {
           IceNet.user.update(data.detail.id, data.detail);
         }
