@@ -1,3 +1,7 @@
+# 停止维护
+
+该仓库已停止维护,新的仓库地址:https://github.com/HereIsYui/ice-robot
+
 <p align="center">
   <a href="https://fishpi.cn">
     <img width="200" src="https://pwl.yuis.cc/logo.png">
